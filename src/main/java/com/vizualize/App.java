@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.spark.SparkConf;
@@ -31,7 +32,7 @@ import org.datavec.spark.transform.misc.WritablesToStringFunction;
 import org.deeplearning4j.datasets.datavec.SequenceRecordReaderDataSetIterator;
 import org.nd4j.linalg.api.buffer.DataBuffer;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.dataset.api.DataSet;
+import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization;
 import org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler;
 import org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize;
@@ -40,6 +41,7 @@ import org.nd4j.linalg.indexing.NDArrayIndex;
 import org.threeten.bp.LocalDate;
 
 import com.vizualize.quandl.QuandlInterface;
+import com.vizualize.quandl.iterator.QuandlIterator;
 import com.vizualize.reader.CSVNLineOverlappingSequenceReader;
 
 import javafx.application.Application;
@@ -60,69 +62,74 @@ import javafx.event.ActionEvent;
  */
 public class App extends Application
 {
-	static SequenceRecordReaderDataSetIterator dataIterator = null;
+	static Iterator<DataSet> dataIterator = null;
 
     public static void main( String[] args )
     {
-    	
-    	Schema inputDataSchema = new Schema.Builder()
-    			.addColumnString("Trade Date")
-    			.addColumnsDouble("Index Value","High", "Low", "Total Market Value", "Dividend Market Value")
-    			.build();
-
-    	TransformProcess tp = new TransformProcess.Builder(inputDataSchema)
-    			//TO DO filter out zero values in columns for index value, high and low
-    			.filter(new ConditionFilter(
-    					new CategoricalColumnCondition("High", ConditionOp.InSet, new HashSet((Arrays.asList("High", ""))))))
-    			.filter(new ConditionFilter(new DoubleColumnCondition("High", ConditionOp.Equal, 0)))
-    			.calculateSortedRank("testSort", "Trade Date", new TextWritableComparator())
-    			.removeColumns("Trade Date", "Total Market Value", "testSort")
-    			.build();
-    	CSVNLineOverlappingSequenceReader reader = new CSVNLineOverlappingSequenceReader(20);
     	SparkConf conf = new SparkConf();
     	conf.setMaster("local[*]");
     	conf.setAppName("DataVec Example");
     	JavaSparkContext sc = new JavaSparkContext(conf);
-    	LocalDate lastDate = LocalDate.parse("1017-11-09");
-    	JavaRDD<String> fetchedData = QuandlInterface.fetchFromDate("NASDAQOMX/OMXS30", lastDate, 
-    			sc.toSparkContext(sc));
-    	String path = args[0];    	
-    	JavaRDD<String> stringData = sc.textFile(path);
-
-    	JavaRDD<List<Writable>> parsedInputData = stringData.map(new StringToWritablesFunction(reader));
-    	JavaRDD<List<Writable>> parsedInputData1 = fetchedData.map(new StringToWritablesFunction(reader));
-
-    	//Now, let's execute the transforms we defined earlier:
-        JavaRDD<List<Writable>> processedData = SparkTransformExecutor.execute(parsedInputData, tp);
-        JavaRDD<List<Writable>> processedData1 = SparkTransformExecutor.execute(parsedInputData1, tp);
-
-        //For the sake of this example, let's collect the data locally and print it:
-        JavaRDD<String> processedAsString = processedData.map(new WritablesToStringFunction(","));
-        JavaRDD<String> processedAsString1 = processedData1.map(new WritablesToStringFunction(","));
-
-        List<String> processedCollected = processedAsString.collect();
-        List<String> processedCollected1 = processedAsString1.collect();
-        List<List<String>> listOfList = new ArrayList<>();
-        listOfList.add(processedCollected1);
-        String[] lines = processedCollected1.toArray(new String[processedCollected1.size()]);
-        ListStringSplit listSplit = new ListStringSplit(listOfList);
-        
-    	try {
-    		File tempFile = File.createTempFile("dl4j", ".tmp");
-            String tempFilePath = tempFile.getAbsolutePath(); 
-            writeToCsv(tempFilePath, lines);
-    		File file = new File(tempFilePath);
-			reader.initialize(new FileSplit(file));
-//			reader.initialize(listSplit);
-			dataIterator = new SequenceRecordReaderDataSetIterator(reader, 1, 1, -1, true);
-			getAndScaleData(1);
-			launch(args);
-			tempFile.delete();
-			int breakIt = 1;
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+    	dataIterator = QuandlIterator.getIterator("NASDAQOMX/OMXS30", sc.toSparkContext(sc));
+    	
+//    	Schema inputDataSchema = new Schema.Builder()
+//    			.addColumnString("Trade Date")
+//    			.addColumnsDouble("Index Value","High", "Low", "Total Market Value", "Dividend Market Value")
+//    			.build();
+//
+//    	TransformProcess tp = new TransformProcess.Builder(inputDataSchema)
+//    			//TO DO filter out zero values in columns for index value, high and low
+//    			.filter(new ConditionFilter(
+//    					new CategoricalColumnCondition("High", ConditionOp.InSet, new HashSet((Arrays.asList("High", ""))))))
+//    			.filter(new ConditionFilter(new DoubleColumnCondition("High", ConditionOp.Equal, 0)))
+//    			.calculateSortedRank("testSort", "Trade Date", new TextWritableComparator())
+//    			.removeColumns("Trade Date", "Total Market Value", "testSort")
+//    			.build();
+//    	CSVNLineOverlappingSequenceReader reader = new CSVNLineOverlappingSequenceReader(20);
+//    	
+//    	LocalDate lastDate = LocalDate.parse("1017-11-09");
+//    	JavaRDD<String> fetchedData = QuandlInterface.fetchFromDate("NASDAQOMX/OMXS30", lastDate, 
+//    			sc.toSparkContext(sc));
+//    	String path = args[0];    	
+//    	JavaRDD<String> stringData = sc.textFile(path);
+//
+//    	JavaRDD<List<Writable>> parsedInputData = stringData.map(new StringToWritablesFunction(reader));
+//    	JavaRDD<List<Writable>> parsedInputData1 = fetchedData.map(new StringToWritablesFunction(reader));
+//
+//    	//Now, let's execute the transforms we defined earlier:
+//        JavaRDD<List<Writable>> processedData = SparkTransformExecutor.execute(parsedInputData, tp);
+//        JavaRDD<List<Writable>> processedData1 = SparkTransformExecutor.execute(parsedInputData1, tp);
+//
+//        //For the sake of this example, let's collect the data locally and print it:
+//        JavaRDD<String> processedAsString = processedData.map(new WritablesToStringFunction(","));
+//        JavaRDD<String> processedAsString1 = processedData1.map(new WritablesToStringFunction(","));
+//
+//        List<String> processedCollected = processedAsString.collect();
+//        List<String> processedCollected1 = processedAsString1.collect();
+//        List<List<String>> listOfList = new ArrayList<>();
+//        listOfList.add(processedCollected1);
+//        String[] lines = processedCollected1.toArray(new String[processedCollected1.size()]);
+//        ListStringSplit listSplit = new ListStringSplit(listOfList);
+//        
+//    	try {
+//    		File tempFile = File.createTempFile("dl4j", ".tmp");
+//            String tempFilePath = tempFile.getAbsolutePath(); 
+//            writeToCsv(tempFilePath, lines);
+//    		File file = new File(tempFilePath);
+//			reader.initialize(new FileSplit(file));
+////			reader.initialize(listSplit);
+//			dataIterator = new SequenceRecordReaderDataSetIterator(reader, 1, 1, -1, true);
+//			getAndScaleData(1);
+//			launch(args);
+//			tempFile.delete();
+//			int breakIt = 1;
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+    	getAndScaleData(1);
+		launch(args);
+		QuandlIterator.deleteTmpFile();
     }
 
     public static void getAndScaleData(int period) {
@@ -196,25 +203,25 @@ public class App extends Application
 		return normalizer;
     }
 
-    public static void writeToCsv(String path, String[] content) {
-    	java.io.File destinationCSV = new java.io.File(path);
-    	try {
-			java.io.PrintWriter outfile = new java.io.PrintWriter(destinationCSV);
-			int size = content.length;
-			int index = 0;
-			for (String line : content) {
-				if (index != size){
-					outfile.write(line + "\n");
-					index++;
-				}
-	    	}
-			outfile.flush();
-			outfile.close();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    }
+//    public static void writeToCsv(String path, String[] content) {
+//    	java.io.File destinationCSV = new java.io.File(path);
+//    	try {
+//			java.io.PrintWriter outfile = new java.io.PrintWriter(destinationCSV);
+//			int size = content.length;
+//			int index = 0;
+//			for (String line : content) {
+//				if (index != size){
+//					outfile.write(line + "\n");
+//					index++;
+//				}
+//	    	}
+//			outfile.flush();
+//			outfile.close();
+//		} catch (FileNotFoundException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//    }
 
     final XYChart.Series<String, Number> series = new XYChart.Series<>();
     final static XYChart.Series<Number, Number> closeSeries = new XYChart.Series<>();
