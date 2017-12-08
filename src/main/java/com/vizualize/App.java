@@ -11,8 +11,10 @@ import java.util.List;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.sql.Row;
 import org.codehaus.janino.Java.ArrayLength;
 import org.datavec.api.split.FileSplit;
+import org.datavec.api.split.ListStringSplit;
 import org.datavec.api.transform.TransformProcess;
 import org.datavec.api.transform.condition.ConditionOp;
 import org.datavec.api.transform.condition.column.CategoricalColumnCondition;
@@ -35,6 +37,9 @@ import org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler;
 import org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.indexing.NDArrayIndex;
+import org.threeten.bp.LocalDate;
+
+import com.vizualize.quandl.QuandlInterface;
 import com.vizualize.reader.CSVNLineOverlappingSequenceReader;
 
 import javafx.application.Application;
@@ -59,6 +64,7 @@ public class App extends Application
 
     public static void main( String[] args )
     {
+    	
     	Schema inputDataSchema = new Schema.Builder()
     			.addColumnString("Trade Date")
     			.addColumnsDouble("Index Value","High", "Low", "Total Market Value", "Dividend Market Value")
@@ -77,27 +83,41 @@ public class App extends Application
     	conf.setMaster("local[*]");
     	conf.setAppName("DataVec Example");
     	JavaSparkContext sc = new JavaSparkContext(conf);
-    	String path = args[0];
-    	String pathProcessed = args[1]; 
+    	LocalDate lastDate = LocalDate.parse("1017-11-09");
+    	JavaRDD<String> fetchedData = QuandlInterface.fetchFromDate("NASDAQOMX/OMXS30", lastDate, 
+    			sc.toSparkContext(sc));
+    	String path = args[0];    	
     	JavaRDD<String> stringData = sc.textFile(path);
 
     	JavaRDD<List<Writable>> parsedInputData = stringData.map(new StringToWritablesFunction(reader));
+    	JavaRDD<List<Writable>> parsedInputData1 = fetchedData.map(new StringToWritablesFunction(reader));
 
     	//Now, let's execute the transforms we defined earlier:
         JavaRDD<List<Writable>> processedData = SparkTransformExecutor.execute(parsedInputData, tp);
+        JavaRDD<List<Writable>> processedData1 = SparkTransformExecutor.execute(parsedInputData1, tp);
 
         //For the sake of this example, let's collect the data locally and print it:
         JavaRDD<String> processedAsString = processedData.map(new WritablesToStringFunction(","));
+        JavaRDD<String> processedAsString1 = processedData1.map(new WritablesToStringFunction(","));
 
         List<String> processedCollected = processedAsString.collect();
-        String[] lines = processedCollected.toArray(new String[processedCollected.size()]);
-        writeToCsv(pathProcessed, lines);
+        List<String> processedCollected1 = processedAsString1.collect();
+        List<List<String>> listOfList = new ArrayList<>();
+        listOfList.add(processedCollected1);
+        String[] lines = processedCollected1.toArray(new String[processedCollected1.size()]);
+        ListStringSplit listSplit = new ListStringSplit(listOfList);
+        
     	try {
-    		File file = new File(pathProcessed);
+    		File tempFile = File.createTempFile("dl4j", ".tmp");
+            String tempFilePath = tempFile.getAbsolutePath(); 
+            writeToCsv(tempFilePath, lines);
+    		File file = new File(tempFilePath);
 			reader.initialize(new FileSplit(file));
+//			reader.initialize(listSplit);
 			dataIterator = new SequenceRecordReaderDataSetIterator(reader, 1, 1, -1, true);
 			getAndScaleData(1);
 			launch(args);
+			tempFile.delete();
 			int breakIt = 1;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -116,7 +136,6 @@ public class App extends Application
     		INDArray unscaledFeatures = dataSequence.getFeatures().dup();
     		//We need to normalize our data. We'll use NormalizeStandardize (which gives us mean 0, unit variance):
     		INDArray da = dataSequence.getFeatures();
-//    		DataNormalization normalizer = getMinMaxScaler(da);
     		DataNormalization normalizer = getStandardizedNormalizer(da);
     		normalizer.transform(da);
     		addScaledSeries(da);
