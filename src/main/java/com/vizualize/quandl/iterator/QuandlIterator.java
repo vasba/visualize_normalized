@@ -7,10 +7,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.datavec.api.split.FileSplit;
 import org.datavec.api.transform.TransformProcess;
 import org.datavec.api.transform.condition.ConditionOp;
@@ -31,9 +29,8 @@ import com.vizualize.quandl.QuandlInterface;
 import com.vizualize.reader.CSVNLineOverlappingSequenceReader;
 
 public class QuandlIterator {
-	static File tempFile = null;
-	public static Iterator<DataSet> getIterator(String symbol, SparkContext sc) {
-		Iterator<DataSet> dataIterator = null;
+	File tempFile = null;
+	public Iterator<DataSet> getIterator(String symbol, SparkContext sc) {
 		Schema inputDataSchema = new Schema.Builder()
     			.addColumnString("Trade Date")
     			.addColumnsDouble("Index Value","High", "Low", "Total Market Value", "Dividend Market Value")
@@ -48,32 +45,18 @@ public class QuandlIterator {
     			.removeColumns("Trade Date", "Total Market Value", "testSort")
     			.build();
     	CSVNLineOverlappingSequenceReader reader = new CSVNLineOverlappingSequenceReader(20);
-//    	SparkConf conf = new SparkConf();
-//    	conf.setMaster("local[*]");
-//    	conf.setAppName("DataVec Example");
-//    	JavaSparkContext sc = new JavaSparkContext(conf);
     	LocalDate lastDate = LocalDate.parse("1017-11-09");
     	JavaRDD<String> fetchedData = QuandlInterface.fetchFromDate(symbol, lastDate, sc);
-//    	String path = args[0];    	
-//    	JavaRDD<String> stringData = sc.textFile(path);
-
-//    	JavaRDD<List<Writable>> parsedInputData = stringData.map(new StringToWritablesFunction(reader));
     	JavaRDD<List<Writable>> parsedInputData1 = fetchedData.map(new StringToWritablesFunction(reader));
 
     	//Now, let's execute the transforms we defined earlier:
-//        JavaRDD<List<Writable>> processedData = SparkTransformExecutor.execute(parsedInputData, tp);
         JavaRDD<List<Writable>> processedData1 = SparkTransformExecutor.execute(parsedInputData1, tp);
 
         //For the sake of this example, let's collect the data locally and print it:
-//        JavaRDD<String> processedAsString = processedData.map(new WritablesToStringFunction(","));
         JavaRDD<String> processedAsString1 = processedData1.map(new WritablesToStringFunction(","));
 
-//        List<String> processedCollected = processedAsString.collect();
         List<String> processedCollected1 = processedAsString1.collect();
-//        List<List<String>> listOfList = new ArrayList<>();
-//        listOfList.add(processedCollected1);
         String[] lines = processedCollected1.toArray(new String[processedCollected1.size()]);
-//        ListStringSplit listSplit = new ListStringSplit(listOfList);
         
     	try {
     		tempFile = File.createTempFile("dl4j", ".tmp");
@@ -81,12 +64,8 @@ public class QuandlIterator {
             writeToCsv(tempFilePath, lines);
     		File file = new File(tempFilePath);
 			reader.initialize(new FileSplit(file));
-//			reader.initialize(listSplit);
+
 			return new SequenceRecordReaderDataSetIterator(reader, 1, 1, -1, true);
-//			getAndScaleData(1);
-//			launch(args);
-//			tempFile.delete();
-//			int breakIt = 1;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -94,7 +73,7 @@ public class QuandlIterator {
 		return null;
 	}
 	
-	public static void deleteTmpFile() {
+	public void deleteTmpFile() {
 		if (tempFile != null)
 			tempFile.delete();
 	}
