@@ -30,7 +30,7 @@ import com.vizualize.reader.CSVNLineOverlappingSequenceReader;
 
 public class QuandlIterator {
 	File tempFile = null;
-	public Iterator<DataSet> getIterator(String symbol, SparkContext sc) {
+	public Iterator<DataSet> getIterator(String symbol, SparkContext sc, int periodLength) {
 		Schema inputDataSchema = new Schema.Builder()
     			.addColumnString("Trade Date")
     			.addColumnsDouble("Index Value","High", "Low", "Total Market Value", "Dividend Market Value")
@@ -41,10 +41,12 @@ public class QuandlIterator {
     			.filter(new ConditionFilter(
     					new CategoricalColumnCondition("High", ConditionOp.InSet, new HashSet((Arrays.asList("High", ""))))))
     			.filter(new ConditionFilter(new DoubleColumnCondition("High", ConditionOp.Equal, 0)))
+    			.filter(new ConditionFilter(new DoubleColumnCondition("Low", ConditionOp.Equal, 0)))
+    			.filter(new ConditionFilter(new DoubleColumnCondition("Index Value", ConditionOp.Equal, 0)))
     			.calculateSortedRank("testSort", "Trade Date", new TextWritableComparator())
     			.removeColumns("Trade Date", "Total Market Value", "testSort")
     			.build();
-    	CSVNLineOverlappingSequenceReader reader = new CSVNLineOverlappingSequenceReader(20);
+    	CSVNLineOverlappingSequenceReader reader = new CSVNLineOverlappingSequenceReader(periodLength);
     	LocalDate lastDate = LocalDate.parse("1017-11-09");
     	JavaRDD<String> fetchedData = QuandlInterface.fetchFromDate(symbol, lastDate, sc);
     	JavaRDD<List<Writable>> parsedInputData1 = fetchedData.map(new StringToWritablesFunction(reader));

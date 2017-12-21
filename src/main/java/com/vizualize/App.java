@@ -14,6 +14,8 @@ import org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.indexing.NDArrayIndex;
 
+import com.vizualize.normalizer.MinMaxPeriodNormalizer;
+import com.vizualize.normalizer.StandardizedPeriodNormalizer;
 import com.vizualize.quandl.iterator.QuandlIterator;
 
 import javafx.application.Application;
@@ -34,12 +36,13 @@ public class App extends Application
 
     public static void main( String[] args )
     {
+    	int periodLength = 30;
     	SparkConf conf = new SparkConf();
     	conf.setMaster("local[*]");
     	conf.setAppName("DataVec Example");
     	JavaSparkContext sc = new JavaSparkContext(conf);
     	QuandlIterator qi = new QuandlIterator();
-    	dataIterator = qi.getIterator("NASDAQOMX/OMXS30", sc.toSparkContext(sc));    	
+    	dataIterator = qi.getIterator("NASDAQOMX/OMXS30", sc.toSparkContext(sc), periodLength);    	
     	getAndScaleData(1);
     	launch(args);
 		qi.deleteTmpFile();
@@ -94,26 +97,28 @@ public class App extends Application
     }
 
     public static DataNormalization getMinMaxScaler(INDArray array) {
-		NormalizerMinMaxScaler normalizer = new NormalizerMinMaxScaler();
-		double min = array.minNumber().doubleValue();
-		double max = array.maxNumber().doubleValue();
-		double[] mins = {min, min, min};
-		INDArray featureMin = Nd4j.create(mins,new int[]{3,1});
-		double[] maxes = {max, max, max};
-		INDArray featureMax = Nd4j.create(maxes,new int[]{3,1});
-		normalizer.setFeatureStats(featureMin, featureMax);
-		return normalizer;
+    	return MinMaxPeriodNormalizer.getNormalizer(array);
+//		NormalizerMinMaxScaler normalizer = new NormalizerMinMaxScaler();
+//		double min = array.minNumber().doubleValue();
+//		double max = array.maxNumber().doubleValue();
+//		double[] mins = {min, min, min};
+//		INDArray featureMin = Nd4j.create(mins,new int[]{3,1});
+//		double[] maxes = {max, max, max};
+//		INDArray featureMax = Nd4j.create(maxes,new int[]{3,1});
+//		normalizer.setFeatureStats(featureMin, featureMax);
+//		return normalizer;
     }
 
     public static DataNormalization getStandardizedNormalizer(INDArray array) {
-		double mean = array.meanNumber().doubleValue();
-		double std = array.stdNumber().doubleValue();
-		double[] means = {mean, mean, mean};
-		INDArray featureMean = Nd4j.create(means,new int[]{3,1});
-		double[] stds = {std, std, std};
-		INDArray featureStd = Nd4j.create(stds,new int[]{3,1});
-		NormalizerStandardize normalizer = new NormalizerStandardize(featureMean, featureStd);
-		return normalizer;
+    	return StandardizedPeriodNormalizer.getNormalizer(array);
+//		double mean = array.meanNumber().doubleValue();
+//		double std = array.stdNumber().doubleValue();
+//		double[] means = {mean, mean, mean};
+//		INDArray featureMean = Nd4j.create(means,new int[]{3,1});
+//		double[] stds = {std, std, std};
+//		INDArray featureStd = Nd4j.create(stds,new int[]{3,1});
+//		NormalizerStandardize normalizer = new NormalizerStandardize(featureMean, featureStd);
+//		return normalizer;
     }
 
     final XYChart.Series<String, Number> series = new XYChart.Series<>();
