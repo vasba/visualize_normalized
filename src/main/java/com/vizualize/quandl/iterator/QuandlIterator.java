@@ -12,6 +12,7 @@ import java.util.Random;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
+import org.datavec.api.records.reader.SequenceRecordReader;
 import org.datavec.api.split.FileSplit;
 import org.datavec.api.transform.Transform;
 import org.datavec.api.transform.TransformProcess;
@@ -47,6 +48,7 @@ import com.vizualize.quandl.QuandlInterface;
 import com.vizualize.reader.CSVNLineOverlappingSequenceReader;
 import com.vizualize.reader.ClassificationNormalizer;
 import com.vizualize.reader.DataSetNormalizer;
+import com.vizualize.reader.LabelCSVNLineOverlappingSequenceReader;
 
 public class QuandlIterator {
 	File tempFile = null;
@@ -55,13 +57,14 @@ public class QuandlIterator {
 	Transform closeTransform = null;
 	AbstractDataSetNormalizer dsNormalizer = null;
 	public boolean doNormalize = true;
+	public boolean forLstm = false;
 	
 	public DataSetIterator getIterator(String symbol, SparkContext sc, 
 			int periodLength, int lookForwardPeriod, boolean forPlotting, 
 			int closeIndex, boolean classification, String startDate,
 			String endDate) {
 			    
-    	CSVNLineOverlappingSequenceReader reader = new CSVNLineOverlappingSequenceReader(periodLength, lookForwardPeriod, forPlotting, closeIndex, false);
+    	CSVNLineOverlappingSequenceReader reader = new CSVNLineOverlappingSequenceReader(periodLength, lookForwardPeriod, forPlotting, closeIndex, false, forLstm);
     	    	    	
     	JavaRDD<String> fetchedData = fetchFromDate(symbol, startDate, endDate, sc);
     	JavaRDD<List<Writable>> parsedInputData1 = fetchedData.map(new StringToWritablesFunction(reader));
@@ -83,20 +86,35 @@ public class QuandlIterator {
     		tempFile.deleteOnExit();
             String tempFilePath = tempFile.getAbsolutePath(); 
             writeToCsv(tempFilePath, lines);
-    		File file = new File(tempFilePath);
-    		reader1 = new CSVNLineOverlappingSequenceReader(periodLength, lookForwardPeriod, forPlotting, closeIndex, classification);
-    		reader1.setWritableType("double");
+    		File file = new File(tempFilePath);    		
+    		reader1 = new CSVNLineOverlappingSequenceReader(periodLength, lookForwardPeriod, forPlotting, closeIndex, classification, forLstm);
+    		((CSVNLineOverlappingSequenceReader)reader1).setWritableType("double");
     		reader1.initialize(new FileSplit(file));
+
     		SequenceRecordReaderDataSetIterator iterator;
     		if (!classification) {
     		    iterator = new SequenceRecordReaderDataSetIterator(reader1, 1, 1, -1, true);
     		} else {
-    		    iterator = new SequenceRecordReaderDataSetIterator(reader1, 1, 2, 50, false);
+    			if (forLstm) {
+    				CSVNLineOverlappingSequenceReader reader2 = new LabelCSVNLineOverlappingSequenceReader(periodLength, lookForwardPeriod, forPlotting, closeIndex, classification, forLstm);
+    				((CSVNLineOverlappingSequenceReader)reader2).setWritableType("double");
+    				reader2.initialize(new FileSplit(file));
+    				iterator = new SequenceRecordReaderDataSetIterator(reader1, reader2, 1, 2,
+    						false, SequenceRecordReaderDataSetIterator.AlignmentMode.ALIGN_END);
+    			} else {
+    				iterator = new SequenceRecordReaderDataSetIterator(reader1, 1, 3, 3, false);
+    			}
     		}
     		
 			if (!forPlotting) {
 //				iterator.setPreProcessor(new DataSetNormalizer());
-				return createMLPIterator(iterator, classification);
+				if (forLstm) {
+//					iterator.setPreProcessor(new DataSetNormalizer());
+					return iterator;
+//					return createLstmIterator(iterator, classification);
+				} else {
+					return createMLPIterator(iterator, classification);
+				}
 			}
 			return iterator;
 		} catch (Exception e) {
@@ -172,6 +190,14 @@ public class QuandlIterator {
 	    return QuandlInterface.fetchFromDate(name, startDate, context);
 	}
 	
+	private DataSetIterator createLstmIterator(SequenceRecordReaderDataSetIterator sequenceIterator,
+	        boolean classification) {
+		
+		while (sequenceIterator.hasNext()) {
+			DataSet ds = sequenceIterator.next();
+		}
+		return null;
+	}
 	
 	private DataSetIterator createMLPIterator(SequenceRecordReaderDataSetIterator sequenceIterator,
 	        boolean classification) {
@@ -180,11 +206,11 @@ public class QuandlIterator {
 		INDArray allLabels = null;
 		
 		DataSetNormalizer normalizer;
-		if (classification) {
-			normalizer = new ClassificationNormalizer();                
-		} else {
+//		if (classification) {
+//			normalizer = new ClassificationNormalizer();                
+//		} else {
 			normalizer = new DataSetNormalizer();         
-		}              		
+//		}              		
 
 		double stdAverage = 0;
 		double minStd = Double.MAX_VALUE;
@@ -204,22 +230,22 @@ public class QuandlIterator {
             
             if (doNormalize) {
             	normalizer.preProcess(ds); 
-            	setDSNormalizer(normalizer.getNormalizer());
-            	// calculate statistics for standardization
-            	double std = ((NormalizerStandardize) normalizer.getNormalizer()).getStd().getDouble(0);
-            	stdAverage = stdAverage * (index -1)/index + std/index;
-            	
-            	if (std > maxStd)
-            		maxStd = std;
-            	if (std < minStd)
-            		minStd = std;
-            	double mean = ((NormalizerStandardize) normalizer.getNormalizer()).getMean().getDouble(0);
-            	meanAverage = meanAverage * (index -1)/index + mean/index;
-            	
-            	if (mean > maxMean)
-            		maxMean = mean;
-            	if (mean < minMean)
-            		minMean = mean;
+//            	setDSNormalizer(normalizer.getNormalizer());
+//            	// calculate statistics for standardization
+//            	double std = ((NormalizerStandardize) normalizer.getNormalizer()).getStd().getDouble(0);
+//            	stdAverage = stdAverage * (index -1)/index + std/index;
+//            	
+//            	if (std > maxStd)
+//            		maxStd = std;
+//            	if (std < minStd)
+//            		minStd = std;
+//            	double mean = ((NormalizerStandardize) normalizer.getNormalizer()).getMean().getDouble(0);
+//            	meanAverage = meanAverage * (index -1)/index + mean/index;
+//            	
+//            	if (mean > maxMean)
+//            		maxMean = mean;
+//            	if (mean < minMean)
+//            		minMean = mean;
             }
             
 			int featureSize = features.size(0);
@@ -235,8 +261,7 @@ public class QuandlIterator {
 //			nds.normalize();
 //			DataSet subDs = ds.get(0); 
 			list.add(nds);
-			index++;
-			
+			index++;			
 		}
 		
 //		Collections.shuffle(list,new Random(345));		

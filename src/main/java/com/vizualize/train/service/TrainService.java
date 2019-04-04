@@ -30,18 +30,17 @@ import com.vizualize.serialize.SerializableUtils;
 
 public class TrainService {
     
-    static JavaSparkContext sc;
-    static final int periodLength = 60;
+    public static JavaSparkContext sc;
+    public static final int periodLength = 20;
     //Number of epochs (full passes of the data)
     public static final int nEpochs = 50;
-
-    static int closeIndex = 1;
-    static boolean classification = false;
+    public static int closeIndex = 1;
+    static boolean classification = true;
     static final int numInputs = 1 * periodLength;
 //  number of outputs is 1 if not for classification, 
 //  predict close price 
-    static int numOutputs = 1;
-    static int numHidenNodes = 50;
+    static int numOutputs = 3;
+    static int numHidenNodes = numInputs/3;
         
     public static JavaSparkContext getSc() {        
         if (sc == null) {
@@ -53,6 +52,14 @@ public class TrainService {
         return sc;
     }
 
+    public static String getModelName(String instrumentName, int lookForwardPeriod) {
+    	String name = instrumentName + "_" + lookForwardPeriod; 
+    	if (classification)
+    		name += "_classification";
+    	return name;
+    }
+    
+    
     public static void train(String instrumentName, int lookForwardPeriod) throws Exception {
     	System.setProperty(PlayUIServer.UI_SERVER_PORT_PROPERTY, "9005");
     	
@@ -65,7 +72,7 @@ public class TrainService {
         boolean plotting = false;
         
         getSc();
-        String modelName = instrumentName + "_" + lookForwardPeriod;
+        String modelName = getModelName(instrumentName, lookForwardPeriod);
         MultiLayerNetwork pretrainNet = NetworkSerializer.loadNetwork(modelName);
         
         String date = NetworkSerializer.lastTrainedDate(modelName);
@@ -82,7 +89,11 @@ public class TrainService {
         
         //Create the network
         if (pretrainNet == null) {
-            MultiLayerConfiguration mlpConf = NetworkConfiguration.getDeepDenseLayerNetworkConfiguration(numHidenNodes, numInputs, numOutputs);
+            MultiLayerConfiguration mlpConf;
+            if (classification)
+            	mlpConf = NetworkConfiguration.getDeepDenseLayerNetworkConfigurationClassification(numHidenNodes, numInputs, numOutputs);
+            else
+            	mlpConf = NetworkConfiguration.getDeepDenseLayerNetworkConfiguration(numHidenNodes, numInputs, numOutputs);
             pretrainNet = new MultiLayerNetwork(mlpConf);
             pretrainNet.init();
         }
@@ -99,33 +110,33 @@ public class TrainService {
         	DataSetIterator testSetIterator = trainTestIteratorPair.getTestIterator();
         	
         	trainSetIterator.reset();
-        	int keepPatterns = 0;
-        	int upPattern = 0;
-        	int downPattern = 0;
-        	ArrayList<Double> changes = new ArrayList<>();
-        	while(trainSetIterator.hasNext()) {
-        		DataSet ds = trainSetIterator.next();
-        		INDArray features = ds.getFeatures();
-        		INDArray lables = ds.getLabels();
-        		int featuresSize = features.size(1);
-        		double lastFeature = features.getDouble(featuresSize -1);
-        		double label = lables.getDouble(0);
-//        		double diff = (label - lastFeature)*100/lastFeature;
-        		double diff = (label - lastFeature);
-        		double absDiff = Math.abs(diff);
-        		changes.add(diff);        		
-        		if (absDiff < 3)
-        			keepPatterns++;
-        		else if (label > lastFeature)
-        			upPattern++;
-        		else
-        			downPattern++;
-        	}
-        	
-        	Double[] changesArray = new Double[1];
-        	changesArray = changes.toArray(changesArray);
-    		double[] doubles = ArrayUtils.toPrimitive(changesArray);
-    		Plot.plotHistogram(doubles, 100);
+//        	int keepPatterns = 0;
+//        	int upPattern = 0;
+//        	int downPattern = 0;
+//        	ArrayList<Double> changes = new ArrayList<>();
+//        	while(trainSetIterator.hasNext()) {
+//        		DataSet ds = trainSetIterator.next();
+//        		INDArray features = ds.getFeatures();
+//        		INDArray lables = ds.getLabels();
+//        		int featuresSize = features.size(1);
+//        		double lastFeature = features.getDouble(featuresSize -1);
+//        		double label = lables.getDouble(0);
+////        		double diff = (label - lastFeature)*100/lastFeature;
+//        		double diff = (label - lastFeature);
+//        		double absDiff = Math.abs(diff);
+//        		changes.add(diff);        		
+//        		if (absDiff < 3)
+//        			keepPatterns++;
+//        		else if (label > lastFeature)
+//        			upPattern++;
+//        		else
+//        			downPattern++;
+//        	}
+//        	
+//        	Double[] changesArray = new Double[1];
+//        	changesArray = changes.toArray(changesArray);
+//    		double[] doubles = ArrayUtils.toPrimitive(changesArray);
+//    		Plot.plotHistogram(doubles, 100);
         		
         	for( int i=0; i<nEpochs; i++ ){
         		trainSetIterator.reset();
@@ -157,7 +168,7 @@ public class TrainService {
     
     public static void evaluate(DataSetIterator testSetIterator, MultiLayerNetwork net) {
     	testSetIterator.reset();
-    	Evaluation ceval = new Evaluation(2);
+    	Evaluation ceval = new Evaluation(3);
     	int testCount = 0;
     	while(testSetIterator.hasNext()){
     		DataSet t = testSetIterator.next(1);
@@ -184,7 +195,8 @@ public class TrainService {
     		//            }
     		//            int i = 0;
 
-    		ceval.eval(actualBuySell, predictedBuySell);
+//    		ceval.eval(actualBuySell, predictedBuySell);
+    		ceval.eval(lables, predicted);
 //    		if (testCount%1000 == 1) {
 //    			Plot.plot(featuresInd, labelsInd, predictedInd, testCount);
 //    			int breakIt = 2;

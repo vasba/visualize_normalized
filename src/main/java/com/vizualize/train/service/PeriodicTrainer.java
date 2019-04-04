@@ -22,22 +22,22 @@ public class PeriodicTrainer  extends Thread {
             try {
             	String instrument = "OMXS30_5M"; 
 //            	String instrument = "US500_5M";
-            	int loopForward = 30;
-            	
+            	int loopForward = 15;
+            
 //            	double gain = TopBottomPredictor.evaluateStrategy(instrument);
             	
-//            	LocalDateTime beforeTime = LocalDateTime.now();
-//            	TradingActions action = TopBottomPredictor.predictBuyOrSell(instrument);
-//            	System.out.println(action);
-//            	if (action.equals(TradingActions.BUY))
-//            		postOrder(true, instrument);
-//            	else if (action.equals(TradingActions.SELL))
-//            		postOrder(false, instrument);
-//            	LocalDateTime afterTime = LocalDateTime.now();
-//            	long duration = beforeTime.until(afterTime, ChronoUnit.MILLIS);  
-//            	Thread.sleep(60000 - duration);
-//            	
-                TrainService.train(instrument, loopForward);
+            	LocalDateTime beforeTime = LocalDateTime.now();
+            	TradingActions action = TopBottomPredictor.predictBuyOrSell(instrument);
+            	System.out.println(action);
+            	if (action.equals(TradingActions.BUY))
+            		postOrder(true, instrument);
+            	else if (action.equals(TradingActions.SELL))
+            		postOrder(false, instrument);
+            	LocalDateTime afterTime = LocalDateTime.now();
+            	long duration = beforeTime.until(afterTime, ChronoUnit.MILLIS);  
+            	Thread.sleep(60000 - duration);
+            	
+//                TrainService.train(instrument, loopForward);
 //                int wait = 0;
 //                BuySellController.evaluateBuySellPrediction(instrument, loopForward);
 //                boolean buy = BuySellController.predictBuyOrSell(instrument, loopForward);

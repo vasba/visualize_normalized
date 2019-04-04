@@ -5,10 +5,14 @@ import java.util.ArrayList;
 
 import org.apache.spark.api.java.JavaSparkContext;
 import org.codehaus.janino.Java.EnumConstant;
+import org.nd4j.linalg.api.buffer.DataBuffer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 
+import com.tictactec.ta.lib.Core;
+import com.tictactec.ta.lib.MAType;
+import com.tictactec.ta.lib.MInteger;
 import com.vizualize.network.NetworkSerializer;
 import com.vizualize.plot.Plot;
 import com.vizualize.quandl.iterator.CSVIterator;
@@ -81,10 +85,12 @@ public class TopBottomPredictor {
 		INDArray lables = dataSet.getLabels();
 		INDArray featuresInd = features.getRow(0); 
     	INDArray labelsInd = lables.getRow(0);            	
-    	TradingActions action = predictSeriesBuy(features);
+//    	TradingActions action = predictSeriesBuy(features);
+    	TradingActions action = predictSeriesBuyMA(featuresInd);
+    	
     	if(!action.equals(TradingActions.KEEP) && !action.equals(lastTradeAction)) {
     		LocalDateTime time = LocalDateTime.now();
-    		Plot.plot(featuresInd, labelsInd, null, time.toString()+ " : " +action);
+//    		Plot.plot(featuresInd, labelsInd, null, time.toString()+ " : " +action);
     		double lastPrice = features.getDouble(features.size(1)-1);
     		if (evaluate) {
     			if (lastTradedPrice != 0) {
@@ -163,6 +169,26 @@ public class TopBottomPredictor {
 		return TradingActions.KEEP; 
 	}
 
+	public static TradingActions predictSeriesBuyMA(INDArray features) {
+		Core taCore = new Core();
+		MInteger outBegIdx = new MInteger();
+		MInteger outNBElement = new MInteger();
+		double outReal[] = new double[48];
+		DataBuffer dataBuffer = features.data();
+		double[] inReal = dataBuffer.asDouble();
+
+		taCore.movingAverage(0, inReal.length-1, inReal, 3, MAType.Sma, outBegIdx, outNBElement, outReal);
+		double last = outReal[outReal.length-1];
+		double beforeLast = outReal[outReal.length-2];
+		TradingActions action = TradingActions.KEEP; 
+		if (last > beforeLast)
+			action = TradingActions.BUY;
+		else if (last < beforeLast)
+			action = TradingActions.SELL;
+//		Plot.plot(outReal, 0);
+		return action;
+	}
+	
 	
 	public static TopBottom computeTopBottom(double first, double second, double third, double fourth, double fifth) {
 		if (first > third && second > third && fifth > third && fourth > third)

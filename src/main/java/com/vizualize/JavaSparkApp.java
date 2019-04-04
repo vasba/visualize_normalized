@@ -7,6 +7,7 @@ import org.eclipse.jetty.util.log.Log;
 
 import com.vizualize.controllers.BuySellController;
 import com.vizualize.train.service.PeriodicTrainer;
+import com.vizualize.train.service.PeriodicTrainerLstm;
 
 
 public class JavaSparkApp {
@@ -23,7 +24,8 @@ public class JavaSparkApp {
         
         get("/lastOrder", BuySellController.getLastOrder);
         
-        Thread t = new PeriodicTrainer();
+//        Thread t = new PeriodicTrainer();
+        Thread t = new PeriodicTrainerLstm();
         t.start();
     }
 

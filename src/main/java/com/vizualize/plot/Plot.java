@@ -29,6 +29,13 @@ public class Plot {
         plot(x, y, predicted, title);
     }
     
+    public static void plot(final double[] x, final int step) {
+    	String title = "Example - " + step;
+    	final XYSeriesCollection dataSet = new XYSeriesCollection();
+    	addSeries(dataSet, x, "Data", 0);
+    	plot(dataSet, title);
+    }
+    
     public static void plot(final INDArray x, final INDArray y, final INDArray predicted, String title) {
         final XYSeriesCollection dataSet = new XYSeriesCollection();
         addSeries(dataSet,x,"Features", 0);
@@ -39,7 +46,11 @@ public class Plot {
         	addSeries(dataSet,predicted,"Predicted", x.size(1));
         }
 
-        final JFreeChart chart = ChartFactory.createXYLineChart(
+        plot(dataSet, title);
+    }
+    
+    public static void plot(final XYSeriesCollection dataSet, final String title) {
+    	final JFreeChart chart = ChartFactory.createXYLineChart(
                 title,      // chart title
                 "X",                        // x axis label
                 "Y", // y axis label
@@ -66,8 +77,12 @@ public class Plot {
     public static void addSeries(final XYSeriesCollection dataSet, final INDArray x, final String label, int startPosition){
         final double[] xd = x.data().asDouble();
 //        final double[] yd = y.data().asDouble();
-        final XYSeries s = new XYSeries(label);
-        for( int j=startPosition; j<xd.length + startPosition; j++ ) s.add(j,xd[j-startPosition]);
+        addSeries(dataSet, xd, label, startPosition);
+    }
+    
+    public static void addSeries(final XYSeriesCollection dataSet, final double[] x, final String label, int startPosition){
+    	final XYSeries s = new XYSeries(label);
+        for( int j=startPosition; j<x.length + startPosition; j++ ) s.add(j,x[j-startPosition]);
         
         dataSet.addSeries(s);
     }

@@ -27,12 +27,12 @@ public class DataSetNormalizer implements DataSetPreProcessor {
 		INDArray dsl = toPreProcess.getLabels();
 //		INDArray daCopy = toPreProcess.getFeatures().dup();
 		INDArray mergedData =  Nd4j.toFlattened(da);
-		normalizer = (NormalizerStandardize) StandardizedPeriodNormalizer.getNormalizer(mergedData);
+//		normalizer = (NormalizerStandardize) StandardizedPeriodNormalizer.getNormalizer(mergedData);
 		
 //		INDArray mergedData1 =  Nd4j.toFlattened(da, dsl);
 //		AbstractDataSetNormalizer normalizerN = (NormalizerStandardize) StandardizedPeriodNormalizer.getNormalizer(mergedData1);
-//		normalizer = (NormalizerMinMaxScaler) MinMaxPeriodNormalizer.getNormalizer(mergedData);
-//		normalizer.transform(da);
+		normalizer = (NormalizerMinMaxScaler) MinMaxPeriodNormalizer.getNormalizer(mergedData);
+		normalizer.transform(da);
 //		Object obj = da.getDouble(1);
 //		normalizer.transform(dsl);
 //		double value = dsl.getDouble(0); 

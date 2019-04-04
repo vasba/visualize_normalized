@@ -46,10 +46,14 @@ public class CSVIterator extends QuandlIterator {
                 .calculateSortedRank("testSort", "Date", new TextWritableComparator())
 //                .removeColumns("Date")
 //                .removeColumns("testSort")
-                .removeColumns("testSort", "High", "Low")
+                .removeColumns(columnsToRemove())
                 .build();
         
         return tp;
+    }
+    
+    protected String[] columnsToRemove() {
+    	return new String[]{"testSort", "High", "Low"};
     }
     
     @Override

@@ -27,23 +27,25 @@ public class CSVNLineOverlappingSequenceReader extends CSVNLinesSequenceRecordRe
 
 	public CSVNLineOverlappingSequenceReader(int nLinesPerSequence, int loopForwardPeriod,
 			int skipNumLines, String delimiter, boolean forPlotting, int closeIndex,
-			boolean classification) {
+			boolean classification, boolean forLstm) {
 		super(nLinesPerSequence + loopForwardPeriod, skipNumLines, delimiter);
 		this.nLinesPerSequence = nLinesPerSequence;
 		this.forPlotting = forPlotting;
 		this.closeIndex = closeIndex;
 		this.loopforwardPeriod = loopForwardPeriod;
 		this.classification = classification;
+		this.forLstm = forLstm;
 	}
 
 	public CSVNLineOverlappingSequenceReader(int nLinesPerSequence, int loopForwardPeriod, 
-			boolean forPlotting, int closeIndex, boolean classification) {
+			boolean forPlotting, int closeIndex, boolean classification, boolean forLstm) {
 		super(nLinesPerSequence + loopForwardPeriod);
 		this.nLinesPerSequence = nLinesPerSequence;
 		this.forPlotting = forPlotting;
 		this.closeIndex = closeIndex;
 		this.loopforwardPeriod = loopForwardPeriod;
 		this.classification = classification;
+		this.forLstm = forLstm;
 	}
 
 	List<List<Writable>> lastSequenceRecord = null;
@@ -54,6 +56,7 @@ public class CSVNLineOverlappingSequenceReader extends CSVNLinesSequenceRecordRe
 	int closeIndex;
 	String writableType = "";
 	String dateStr;
+	boolean forLstm = false;
 
 	public String getDateStr() {
         return dateStr;
@@ -115,7 +118,11 @@ public class CSVNLineOverlappingSequenceReader extends CSVNLinesSequenceRecordRe
 		if (forPlotting) {
 			return lastSequenceRecord;
 		} else {
-			return flattenSequence(lastSequenceRecord);
+			if (forLstm) {
+				return sequenceLstm(lastSequenceRecord);
+			} else {
+				return flattenSequence(lastSequenceRecord);
+			}
 		}
 	}
 
@@ -132,6 +139,17 @@ public class CSVNLineOverlappingSequenceReader extends CSVNLinesSequenceRecordRe
         RecordMetaData meta = new RecordMetaDataLineInterval(lineBefore, lineAfter - 1, uri,
                         CSVNLinesSequenceRecordReader.class);
         return new org.datavec.api.records.impl.SequenceRecord(record, meta);
+    }
+    
+    protected List<List<Writable>> sequenceLstm(List<List<Writable>> sequence) {
+    	int i = 0;
+    	ArrayList containerList = new ArrayList<>();
+    	for (List l : sequence) {
+    		if (i < nLinesPerSequence)
+    			containerList.add(l);
+    		i++;
+    	}
+    	return containerList;
     }
     
     private List<List<Writable>> flattenSequence(List<List<Writable>> sequence) {
@@ -151,10 +169,13 @@ public class CSVNLineOverlappingSequenceReader extends CSVNLinesSequenceRecordRe
 //    	label = new DoubleWritable(percentageChange*1000);
     	if (classification) {
     	    List lastForTrain = sequence.get(sequence.size()-loopforwardPeriod - 1);
-    	    
+    	    double threshold = 1;
     	    double difference = label.toDouble() - lastClose.toDouble();
-    	    if (difference > 0) {
-    	        label = new IntWritable(1);
+    	    double absDiff = Math.abs(difference);       		
+    		if (absDiff < threshold) {
+    			label = new IntWritable(1);
+    		} else if (difference > 0) {
+    	        label = new IntWritable(2);
     	    } else {
     	        label = new IntWritable(0);
     	    }
