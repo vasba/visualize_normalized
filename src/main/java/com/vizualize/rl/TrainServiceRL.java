@@ -73,14 +73,14 @@ public class TrainServiceRL extends TrainService {
 			pretrainNet = new MultiLayerNetwork(mlpConf);
 			pretrainNet.init();
 		}
-		FilePrinter.write("rlTrainRepport.txt", "RL train report/n", false);
+		FilePrinter.write("rlTrainRepport.txt", "RL train report", false);
 		pretrainNet.setListeners(new StatsListener(mlnStatsStorage1));
 		ArrayList evaluations = new ArrayList<>();
 		for( int i=0; i<nEpochs; i++ ) {
 			iter.reset();
 			profits.add(profit);
-			String reportContent = "Profit for epoch " + (i-1) + " is: " + profit ;
-			FilePrinter.write("rlTrainRepport.txt", "RL /n", true);
+			String reportContent = "\nProfit for epoch " + (i-1) + " is: " + profit ;
+			FilePrinter.write("rlTrainRepport.txt", reportContent, true);
 			profit = 0;
 			while(iter.hasNext()) {
 				DataSet ds = iter.next();

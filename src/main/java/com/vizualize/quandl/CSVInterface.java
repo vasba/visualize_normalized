@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -39,10 +41,9 @@ static SparkSession spark = null;
         String line = "";
         List<String> rows = new ArrayList<String>();
         ClassLoader classLoader = CSVInterface.class.getClassLoader();
-        URL url = classLoader.getResource(csvFile.toLowerCase());
-        File file = new File(url.getFile());
+        InputStream input = classLoader.getResourceAsStream(csvFile.toLowerCase());      
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file.getAbsolutePath()))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(input))) {
 
             while ((line = br.readLine()) != null) {
                 rows.add(line);
@@ -51,7 +52,7 @@ static SparkSession spark = null;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         Encoder<String> stringEncoder = Encoders.STRING();
         Dataset<String> dataSet = spark.createDataset(rows, stringEncoder);
         return dataSet.toJavaRDD(); 
