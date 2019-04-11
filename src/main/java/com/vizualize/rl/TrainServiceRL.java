@@ -105,10 +105,10 @@ public class TrainServiceRL extends TrainService {
 				previousDataSet = ds;
 				durationSampleCounter++;
 				long endTime = System.currentTimeMillis();
-				double duration = (endTime - startTime)/1000;
+				double duration = (endTime - startTime);
 				averageDuration = averageDuration + (duration -averageDuration)/durationSampleCounter;
 				iteration++;
-				String iterationCounterStr = "Done iteration: " + iteration + "of " + iter.numExamples(); 
+				String iterationCounterStr = "Done iteration: " + iteration + "of "; 
 				iterationCounterStr += "in epoch: " + i + ".";
 				iterationCounterStr += "\n Average iteration time: " + averageDuration;
 				FilePrinter.write("iterationReport.txt", iterationCounterStr, false);
