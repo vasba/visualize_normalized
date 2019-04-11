@@ -169,6 +169,7 @@ public class TrainServiceRL extends TrainService {
 				 normalizer.preProcess(previousDs);
 				 pretrainNet.fit(features, labelsArray);		
 			 }
+			 previousDataSets = new ArrayList<>();
 		 }
 	 }
 }
