@@ -27,7 +27,7 @@ public class TrainServiceRL extends TrainService {
 
 	private static int nIn = 3;
 	private static int nOut = 2;
-	private static int lstmLayerSize = 10;
+	private static int lstmLayerSize = 100;
 	static double epsilon = 0.3;
 	static double profit = 0;
 	static ArrayList<Double> profits = new ArrayList<>();
@@ -76,13 +76,17 @@ public class TrainServiceRL extends TrainService {
 		FilePrinter.write("rlTrainRepport.txt", "RL train report", false);
 		pretrainNet.setListeners(new StatsListener(mlnStatsStorage1));
 		ArrayList evaluations = new ArrayList<>();
+		double averageDuration = 0;
+		int durationSampleCounter = 0;
 		for( int i=0; i<nEpochs; i++ ) {
 			iter.reset();
 			profits.add(profit);
 			String reportContent = "\nProfit for epoch " + (i-1) + " is: " + profit ;
-			FilePrinter.write("rlTrainRepport.txt", reportContent, true);
+			FilePrinter.write("rlTrainReport.txt", reportContent, true);
 			profit = 0;
+			int iteration = 0;
 			while(iter.hasNext()) {
+				long startTime = System.currentTimeMillis();
 				DataSet ds = iter.next();
 				INDArray predictedActionArray = pretrainNet.output(ds.getFeatures());
 				int actualPredictedAction = 1;
@@ -99,6 +103,15 @@ public class TrainServiceRL extends TrainService {
 				}
 				previousDataSets.add(ds);  
 				previousDataSet = ds;
+				durationSampleCounter++;
+				long endTime = System.currentTimeMillis();
+				double duration = (endTime - startTime)/1000;
+				averageDuration = averageDuration + (duration -averageDuration)/durationSampleCounter;
+				iteration++;
+				String iterationCounterStr = "Done iteration: " + iteration + "of " + iter.numExamples(); 
+				iterationCounterStr += "in epoch: " + i + ".";
+				iterationCounterStr += "\n Average iteration time: " + averageDuration;
+				FilePrinter.write("iterationReport.txt", iterationCounterStr, false);
 			}
 		}      
 
