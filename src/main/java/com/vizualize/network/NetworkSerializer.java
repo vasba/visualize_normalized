@@ -14,14 +14,14 @@ import com.vizualize.serialize.SerializableUtils;
 
 public class NetworkSerializer {
     
-    public static final String modelsLocation = "/home/evasiba/hackathon_workspace/modelsTA";
+    public static final String modelsLocation = "~/hackathon_workspace/modelsTA";
     
     public static void saveModel(MultiLayerNetwork network, String modelName,
             String dateStr) throws Exception {
                 
         File directory = new File(modelsLocation + "/" + modelName);
         if (! directory.exists()){
-            directory.mkdir();
+            directory.mkdirs();
         }
         File modelFile = new File(directory, modelName + ".zip");
         ModelSerializer.writeModel(network, modelFile, true);
@@ -60,7 +60,7 @@ public class NetworkSerializer {
     	File directory = new File(modelsLocation + "/" + modelName);
     	File transformFile = new File(directory, modelName + "transform.txt");
     	if (! directory.exists()){
-            directory.mkdir();
+            directory.mkdirs();
         }
     	
     	SerializableUtils.saveSerializable(serializable, transformFile.getAbsolutePath());

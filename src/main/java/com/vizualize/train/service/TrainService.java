@@ -31,7 +31,7 @@ import com.vizualize.serialize.SerializableUtils;
 public class TrainService {
     
     public static JavaSparkContext sc;
-    public static final int periodLength = 20;
+    public static final int periodLength = 50;
     //Number of epochs (full passes of the data)
     public static final int nEpochs = 50;
     public static int closeIndex = 1;

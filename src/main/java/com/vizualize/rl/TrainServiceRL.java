@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import org.deeplearning4j.api.storage.StatsStorage;
+import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.ui.api.UIServer;
@@ -27,8 +28,8 @@ public class TrainServiceRL extends TrainService {
 
 	private static int nIn = 3;
 	private static int nOut = 2;
-	private static int lstmLayerSize = 100;
-	static double epsilon = 0.3;
+	private static int lstmLayerSize = 50;
+	static double epsilon = 1;
 	static double profit = 0;
 	static ArrayList<Double> profits = new ArrayList<>();
 	static Random random = new Random();
@@ -37,8 +38,11 @@ public class TrainServiceRL extends TrainService {
 	static int selectedAction = -1;
 	// the latest state the last action was taken
 	static DataSet selectedDataSet = null;
+	static DataSet currentDataSet = null;
 	static ArrayList<DataSet> previousDataSets = new ArrayList<>();
+	static ArrayList<DataSet> evaluationDataSets = new ArrayList<>();
 	static DataSet previousDataSet = null;
+	static Evaluation eval = null;
 
 	public static void train(String instrumentName, int lookForwardPeriod) throws Exception {
 		System.setProperty(PlayUIServer.UI_SERVER_PORT_PROPERTY, "9005");
@@ -52,7 +56,7 @@ public class TrainServiceRL extends TrainService {
 		boolean plotting = false;
 
 		getSc();
-		String modelName = getModelName(instrumentName, lookForwardPeriod);
+		String modelName = getModelName(instrumentName, periodLength);
 		MultiLayerNetwork pretrainNet = NetworkSerializer.loadNetwork(modelName);
 
 		String date = NetworkSerializer.lastTrainedDate(modelName);
@@ -73,13 +77,20 @@ public class TrainServiceRL extends TrainService {
 			pretrainNet = new MultiLayerNetwork(mlpConf);
 			pretrainNet.init();
 		}
-		FilePrinter.write("rlTrainRepport.txt", "RL train report", false);
+		FilePrinter.write("rlTrainReport.txt", "RL train report", false);
 		pretrainNet.setListeners(new StatsListener(mlnStatsStorage1));
 		ArrayList evaluations = new ArrayList<>();
 		double averageDuration = 0;
 		int durationSampleCounter = 0;
 		for( int i=0; i<nEpochs; i++ ) {
-			iter.reset();
+			previousDataSets = new ArrayList<>();
+			evaluationDataSets = new ArrayList<>();
+			previousDataSet = null;
+			selectedDataSet = null;
+			selectedAction = -1;
+			currentDataSet = null;
+			iter.reset();			
+			eval = new Evaluation(nOut);			
 			profits.add(profit);
 			String reportContent = "\nProfit for epoch " + (i-1) + " is: " + profit ;
 			FilePrinter.write("rlTrainReport.txt", reportContent, true);
@@ -88,15 +99,19 @@ public class TrainServiceRL extends TrainService {
 			while(iter.hasNext()) {
 				long startTime = System.currentTimeMillis();
 				DataSet ds = iter.next();
+				currentDataSet = ds;
 				INDArray predictedActionArray = pretrainNet.output(ds.getFeatures());
 				int actualPredictedAction = 1;
-				if (i > 0) {
+				if (i > 20) {
 					actualPredictedAction= getActualPredictedAction(predictedActionArray);
 					actualPredictedAction = getOtherAction(actualPredictedAction, i);
 				} else {
 					actualPredictedAction = getActualPredictedAction(ds.getLabels());
 				}
-				if (actualPredictedAction != selectedAction) {
+				if (selectedAction < 0) {
+					selectedAction = actualPredictedAction;
+					selectedDataSet = ds;
+				} else if (actualPredictedAction != selectedAction) {
 					trainOnpreviousDataSets(pretrainNet, actualPredictedAction);
 					selectedAction = actualPredictedAction;
 					selectedDataSet = ds;
@@ -113,14 +128,15 @@ public class TrainServiceRL extends TrainService {
 				iterationCounterStr += "\n Average iteration time: " + averageDuration;
 				FilePrinter.write("iterationReport.txt", iterationCounterStr, false);
 			}
-		}      
+			evaluate(pretrainNet);
+		}      		
 
 		String dateStr = csvi.getLastIteratedDate();
 //		NetworkSerializer.saveModel(pretrainNet, modelName, dateStr);    
 	}
 	
-	 public static String getModelName(String instrumentName, int lookForwardPeriod) {
-		 return instrumentName + "_" + lookForwardPeriod + "_lstm_rl";
+	 public static String getModelName(String instrumentName, int periodLength) {
+		 return instrumentName + "_" + periodLength + "_lstm_rl";
 	 }
 	 
 	 static int getActualPredictedAction(INDArray predictedActionArray) {
@@ -141,11 +157,11 @@ public class TrainServiceRL extends TrainService {
 	 }
 	 	 
 	 static INDArray createLabelForLatestSelectedAction() {
-		 INDArray prevFeatures = previousDataSet.getFeatures();
+		 INDArray currentFeatures = currentDataSet.getFeatures();
 		 INDArray selectedFeatures = selectedDataSet.getFeatures();
 		 Double selectedClose = selectedFeatures.getDouble(0, 1, periodLength -1);
-		 Double previousClose = prevFeatures.getDouble(0, 1, periodLength -1);
-		 double diff = previousClose - selectedClose;
+		 Double currentClose = currentFeatures.getDouble(0, 1, periodLength -1);
+		 double diff = currentClose - selectedClose;
 		 
 		 if (selectedAction == 0)
 			 profit -= diff;
@@ -162,14 +178,42 @@ public class TrainServiceRL extends TrainService {
 	 }
 	 
 	 static void trainOnpreviousDataSets(MultiLayerNetwork pretrainNet, int predictedAction) {
-		 if (previousDataSet != null ) {
+		 if (previousDataSet != null && selectedDataSet != null && currentDataSet != null) {
 			 INDArray labelsArray = createLabelForLatestSelectedAction();
 			 for (DataSet previousDs : previousDataSets) {
 				 INDArray features = previousDs.getFeatures();
 				 normalizer.preProcess(previousDs);
-				 pretrainNet.fit(features, labelsArray);		
+				 pretrainNet.fit(features, labelsArray);				 
+				 DataSet pds = new DataSet(features, labelsArray);
+				 evaluationDataSets.add(pds);				 
+				 int waitForPrediction = 2;
 			 }
 			 previousDataSets = new ArrayList<>();
 		 }
 	 }
+	 
+	 static void evaluate(MultiLayerNetwork pretrainNet) {
+		 for (DataSet ds : evaluationDataSets) {
+			 INDArray predictionBig = pretrainNet.output(ds.getFeatures()).getRow(0);
+			 INDArray labelsArray = ds.getLabels();
+			 INDArray prediction = predictionBig.getColumn(periodLength - 1);
+			 INDArray labels = labelsArray.getRow(0).getColumn(periodLength - 1);
+			 INDArray pp = getPredictedVector(prediction);
+			 INDArray ll = getPredictedVector(labels);
+			 eval.eval(ll, pp);
+		 }		 
+	 }
+	 
+	 public static INDArray getPredictedVector(INDArray prediction) {
+//	        double actualDifference = future - actual
+//	        double actualDifference = future; // for percentage change
+	        double[] array = {1, 0};
+	        double buy = prediction.getDouble(0);
+	        double sell = prediction.getDouble(1);
+	        if (buy < sell) {
+	            double[] narray = {0, 1};
+	            array = narray;
+	        }
+	        return Nd4j.create(array, new int[]{1,2});
+	    }
 }

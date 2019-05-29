@@ -65,7 +65,7 @@ public class QuandlIterator {
 			String endDate) {
 			    
     	CSVNLineOverlappingSequenceReader reader = new CSVNLineOverlappingSequenceReader(periodLength, lookForwardPeriod, forPlotting, closeIndex, false, forLstm);
-    	    	    	
+    	
     	JavaRDD<String> fetchedData = fetchFromDate(symbol, startDate, endDate, sc);
     	JavaRDD<List<Writable>> parsedInputData1 = fetchedData.map(new StringToWritablesFunction(reader));
     	
@@ -90,6 +90,8 @@ public class QuandlIterator {
     		reader1 = new CSVNLineOverlappingSequenceReader(periodLength, lookForwardPeriod, forPlotting, closeIndex, classification, forLstm);
     		((CSVNLineOverlappingSequenceReader)reader1).setWritableType("double");
     		reader1.initialize(new FileSplit(file));
+    		reader1.hasIndicators = true;
+    		reader1.setLoopBackPeriod(20);
 
     		SequenceRecordReaderDataSetIterator iterator;
     		if (!classification) {
@@ -98,6 +100,8 @@ public class QuandlIterator {
     			if (forLstm) {
     				CSVNLineOverlappingSequenceReader reader2 = new LabelCSVNLineOverlappingSequenceReader(periodLength, lookForwardPeriod, forPlotting, closeIndex, classification, forLstm);
     				((CSVNLineOverlappingSequenceReader)reader2).setWritableType("double");
+    				reader2.setLoopBackPeriod(20);
+    				reader2.hasIndicators = true;
     				reader2.initialize(new FileSplit(file));
     				iterator = new SequenceRecordReaderDataSetIterator(reader1, reader2, 1, 2,
     						false, SequenceRecordReaderDataSetIterator.AlignmentMode.ALIGN_END);

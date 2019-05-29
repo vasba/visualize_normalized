@@ -20,8 +20,8 @@ import com.vizualize.quandl.iterator.CSVIteratorLstm;
 public class TrainServiceLstm extends TrainService {
 	
 	private static int nIn = 3;
-	private static int nOut = 3;
-	private static int lstmLayerSize = 10;
+	private static int nOut = 2;
+	private static int lstmLayerSize = 50;
 		
 	public static void train(String instrumentName, int lookForwardPeriod) throws Exception {
     	System.setProperty(PlayUIServer.UI_SERVER_PORT_PROPERTY, "9005");

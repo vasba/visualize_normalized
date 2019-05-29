@@ -15,6 +15,8 @@ import org.datavec.api.writable.DoubleWritable;
 import org.datavec.api.writable.IntWritable;
 import org.datavec.api.writable.Writable;
 
+import com.vizualize.indicator.BBIndicator;
+
 
 public class CSVNLineOverlappingSequenceReader extends CSVNLinesSequenceRecordReader {
 	
@@ -57,6 +59,12 @@ public class CSVNLineOverlappingSequenceReader extends CSVNLinesSequenceRecordRe
 	String writableType = "";
 	String dateStr;
 	boolean forLstm = false;
+	int loopBackPeriod = 0;
+	public boolean hasIndicators = false;
+	
+	public void setLoopBackPeriod(int loopBackPeriod) {
+		this.loopBackPeriod = loopBackPeriod;
+	}
 
 	public String getDateStr() {
         return dateStr;
@@ -97,7 +105,7 @@ public class CSVNLineOverlappingSequenceReader extends CSVNLinesSequenceRecordRe
 
 	        List<List<Writable>> sequence = new ArrayList<>();
 	        int count = 0;
-	        while (count++ < nLinesPerSequence + loopforwardPeriod && hasNext()) {
+	        while (count++ < loopBackPeriod + nLinesPerSequence + loopforwardPeriod && hasNext()) {
 	            sequence.add(next());
 	        }
 
@@ -115,15 +123,24 @@ public class CSVNLineOverlappingSequenceReader extends CSVNLinesSequenceRecordRe
         Writable date = first.get(0);
         dateStr = date.toString();
         
+        appendIndicator(lastSequenceRecord);
+        
 		if (forPlotting) {
 			return lastSequenceRecord;
-		} else {
+		} else {			
 			if (forLstm) {
 				return sequenceLstm(lastSequenceRecord);
 			} else {
 				return flattenSequence(lastSequenceRecord);
 			}
 		}
+	}
+	
+	protected void appendIndicator(List<List<Writable>> sequence) {
+		if (hasIndicators) {
+        	BBIndicator bbindicator = new BBIndicator();
+        	bbindicator.appendIndicator(sequence);
+        }
 	}
 
     @Override
