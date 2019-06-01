@@ -16,10 +16,12 @@ import com.vizualize.network.NetworkConfigurationLstm;
 import com.vizualize.network.NetworkSerializer;
 import com.vizualize.quandl.iterator.CSVIterator;
 import com.vizualize.quandl.iterator.CSVIteratorLstm;
+import com.vizualize.reader.DataSetNormalizer;
+import com.vizualize.writer.FilePrinter;
 
 public class TrainServiceLstm extends TrainService {
 	
-	private static int nIn = 3;
+	private static int nIn = 6;
 	private static int nOut = 2;
 	private static int lstmLayerSize = 50;
 		
@@ -46,6 +48,8 @@ public class TrainServiceLstm extends TrainService {
         String endDate = null;
         
         DataSetIterator iter = csvi.getIterator(instrumentName, sc.toSparkContext(sc), periodLength, lookForwardPeriod, plotting, closeIndex, true, date, endDate);
+        DataSetNormalizer normalizer = new DataSetNormalizer();
+        iter.setPreProcessor(normalizer);
         ArrayList<DataSetIterator> preTrainDataIterators = new ArrayList<>();
         preTrainDataIterators.add(iter);
         
@@ -62,19 +66,20 @@ public class TrainServiceLstm extends TrainService {
         for( int i=0; i<nEpochs; i++ ) {
     		iter.reset();
     		pretrainNet.fit(iter);
-    		if (i%10 == 0) {
-    			iter.reset();
-    			Evaluation evaluation = pretrainNet.evaluate(iter);
-    			evaluations.add(evaluation);    			
-    		}
-    	}      
+    		iter.reset();
+    		Evaluation evaluation = pretrainNet.evaluate(iter);
+    		evaluations.add(evaluation);  
+    		String evaluationStr = "Evaluation at iteration: " + i + "\n";
+    		evaluationStr += evaluation.stats() + "\n\n";
+    		FilePrinter.write("lstmEvaluations.txt", evaluationStr, i == 0 ? false : true);
+        }      
         
-		iter.reset();
+		iter.reset(); 
 		Evaluation evaluation = pretrainNet.evaluate(iter);
 		evaluations.add(evaluation);
         
         String dateStr = csvi.getLastIteratedDate();
-//        NetworkSerializer.saveModel(pretrainNet, modelName, dateStr);    
+        NetworkSerializer.saveModel(pretrainNet, modelName, dateStr);    
 
 	}
 	

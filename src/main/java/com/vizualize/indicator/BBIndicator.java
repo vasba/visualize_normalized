@@ -1,6 +1,7 @@
 package com.vizualize.indicator;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.datavec.api.writable.DoubleWritable;
 import org.datavec.api.writable.Writable;
@@ -11,7 +12,10 @@ import com.tictactec.ta.lib.MInteger;
 
 public class BBIndicator extends Indicator{
 	
-	public void appendIndicator(List<List<Writable>> sequence) {
+	public List<List<Writable>> appendIndicator(List<List<Writable>> sequence) {
+		List<List<Writable>> sequenceClone = clone(sequence);
+//		List<List<Writable>> sequenceClone = sequence.stream().collect(Collectors.toList());
+//		List<List<Writable>> sequenceClone = sequence.stream().map(d -> d.clone()).collect(Collectors.toList());
 		double[] inReal = extractColumn(sequence, 1);
 		Core taCore = new Core();
 		int size = sequence.size();
@@ -26,9 +30,10 @@ public class BBIndicator extends Indicator{
 		double optInNbDevUp = 2;
 		double optInNbDevDn = 2;
 		taCore.bbands(startIdx, endIdx, inReal, optInTimePeriod, optInNbDevUp, optInNbDevDn, MAType.Sma, outBegIdx, outNBElement, outRealUpperBand, outRealMiddleBand, outRealLowerBand);
-		adjustSequence(sequence, outBegIdx.value);
-		appendIndicatorResult(sequence, outRealUpperBand, outRealMiddleBand, outRealLowerBand);
+		adjustSequence(sequenceClone, outBegIdx.value);
+		appendIndicatorResult(sequenceClone, outRealUpperBand, outRealMiddleBand, outRealLowerBand);
 		boolean stop = true;
+		return sequenceClone;
 	}
 	
 	

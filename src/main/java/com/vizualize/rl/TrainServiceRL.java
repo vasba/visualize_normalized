@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import org.deeplearning4j.api.storage.StatsStorage;
+import org.deeplearning4j.datasets.iterator.impl.ListDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
@@ -26,7 +27,7 @@ import com.vizualize.writer.FilePrinter;
 
 public class TrainServiceRL extends TrainService {
 
-	private static int nIn = 3;
+	private static int nIn = 6;
 	private static int nOut = 2;
 	private static int lstmLayerSize = 50;
 	static double epsilon = 1;
@@ -89,8 +90,7 @@ public class TrainServiceRL extends TrainService {
 			selectedDataSet = null;
 			selectedAction = -1;
 			currentDataSet = null;
-			iter.reset();			
-			eval = new Evaluation(nOut);			
+			iter.reset();					
 			profits.add(profit);
 			String reportContent = "\nProfit for epoch " + (i-1) + " is: " + profit ;
 			FilePrinter.write("rlTrainReport.txt", reportContent, true);
@@ -103,7 +103,7 @@ public class TrainServiceRL extends TrainService {
 				INDArray predictedActionArray = pretrainNet.output(ds.getFeatures());
 				int actualPredictedAction = 1;
 				if (i > 20) {
-					actualPredictedAction= getActualPredictedAction(predictedActionArray);
+					actualPredictedAction = getActualPredictedAction(predictedActionArray);
 					actualPredictedAction = getOtherAction(actualPredictedAction, i);
 				} else {
 					actualPredictedAction = getActualPredictedAction(ds.getLabels());
@@ -128,7 +128,8 @@ public class TrainServiceRL extends TrainService {
 				iterationCounterStr += "\n Average iteration time: " + averageDuration;
 				FilePrinter.write("iterationReport.txt", iterationCounterStr, false);
 			}
-			evaluate(pretrainNet);
+			evaluate2(pretrainNet);
+			evaluations.add(eval);	
 		}      		
 
 		String dateStr = csvi.getLastIteratedDate();
@@ -193,6 +194,7 @@ public class TrainServiceRL extends TrainService {
 	 }
 	 
 	 static void evaluate(MultiLayerNetwork pretrainNet) {
+		 eval = new Evaluation(nOut);	
 		 for (DataSet ds : evaluationDataSets) {
 			 INDArray predictionBig = pretrainNet.output(ds.getFeatures()).getRow(0);
 			 INDArray labelsArray = ds.getLabels();
@@ -202,6 +204,11 @@ public class TrainServiceRL extends TrainService {
 			 INDArray ll = getPredictedVector(labels);
 			 eval.eval(ll, pp);
 		 }		 
+	 }
+	 
+	 static void evaluate2(MultiLayerNetwork pretrainNet) {
+		 ListDataSetIterator<DataSet> lds = new ListDataSetIterator<>(evaluationDataSets);
+		 eval = pretrainNet.evaluate(lds);
 	 }
 	 
 	 public static INDArray getPredictedVector(INDArray prediction) {

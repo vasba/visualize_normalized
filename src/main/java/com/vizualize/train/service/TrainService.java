@@ -33,7 +33,7 @@ public class TrainService {
     public static JavaSparkContext sc;
     public static final int periodLength = 50;
     //Number of epochs (full passes of the data)
-    public static final int nEpochs = 50;
+    public static final int nEpochs = 20;
     public static int closeIndex = 1;
     static boolean classification = true;
     static final int numInputs = 1 * periodLength;

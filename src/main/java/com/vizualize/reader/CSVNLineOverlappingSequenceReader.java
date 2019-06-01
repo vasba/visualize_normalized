@@ -121,26 +121,26 @@ public class CSVNLineOverlappingSequenceReader extends CSVNLinesSequenceRecordRe
 	    
         List<Writable> first = lastSequenceRecord.get(0);
         Writable date = first.get(0);
-        dateStr = date.toString();
-        
-        appendIndicator(lastSequenceRecord);
+        dateStr = date.toString();               
         
 		if (forPlotting) {
 			return lastSequenceRecord;
 		} else {			
 			if (forLstm) {
-				return sequenceLstm(lastSequenceRecord);
+				List<List<Writable>> withIndicator = appendIndicator(lastSequenceRecord);
+				return sequenceLstm(withIndicator);
 			} else {
 				return flattenSequence(lastSequenceRecord);
 			}
 		}
 	}
 	
-	protected void appendIndicator(List<List<Writable>> sequence) {
+	protected List<List<Writable>> appendIndicator(List<List<Writable>> sequence) {
 		if (hasIndicators) {
         	BBIndicator bbindicator = new BBIndicator();
-        	bbindicator.appendIndicator(sequence);
+        	return bbindicator.appendIndicator(sequence);
         }
+		return sequence;
 	}
 
     @Override
@@ -165,7 +165,7 @@ public class CSVNLineOverlappingSequenceReader extends CSVNLinesSequenceRecordRe
     		if (i < nLinesPerSequence)
     			containerList.add(l);
     		i++;
-    	}
+    	}    	
     	return containerList;
     }
     

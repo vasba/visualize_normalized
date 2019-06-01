@@ -1,9 +1,9 @@
-package com.vizualize.peakandvaley;
+package com.vizualize.peaksandvaleys;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class PeakAndValey {
+public class PeaksAndValeys {
 
 	public static double findLocalMin(double [] arrA){
 		return findLocalMin(arrA, 0, arrA.length);

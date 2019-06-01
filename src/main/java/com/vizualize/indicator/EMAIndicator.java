@@ -1,6 +1,7 @@
 package com.vizualize.indicator;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.datavec.api.writable.DoubleWritable;
 import org.datavec.api.writable.Writable;
@@ -11,7 +12,8 @@ import com.tictactec.ta.lib.MInteger;
 public class EMAIndicator extends SMAIndicator {
 
 	@Override
-	public void appendIndicator(List<List<Writable>> sequence) {
+	public List<List<Writable>> appendIndicator(List<List<Writable>> sequence) {
+		List<List<Writable>> sequenceClone = sequence.stream().collect(Collectors.toList());
 		double[] inReal = extractColumn(sequence, 1);
 		Core taCore = new Core();
 		int size = sequence.size();
@@ -22,7 +24,8 @@ public class EMAIndicator extends SMAIndicator {
 		MInteger outNBElement = new MInteger();
 		double[] outReal = new double[size - optInTimePeriod + 1];
 		taCore.ema(startIdx, endIdx, inReal, optInTimePeriod, outBegIdx, outNBElement, outReal);
-		adjustSequence(sequence, outBegIdx.value);
-		appendIndicatorResult(sequence, outReal);
+		adjustSequence(sequenceClone, outBegIdx.value);
+		appendIndicatorResult(sequenceClone, outReal);
+		return sequenceClone;
 	}	
 }

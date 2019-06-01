@@ -16,10 +16,10 @@ public class MinMaxPeriodNormalizer implements PeriodNormalizer {
 		double max = array.maxNumber().doubleValue();
 		min = min * (1 - offset);
 		max = max * (1 + offset);
-		double[] mins = {min, min, min};
-		INDArray featureMin = Nd4j.create(mins,new int[]{3,1});
-		double[] maxes = {max, max, max};
-		INDArray featureMax = Nd4j.create(maxes,new int[]{3,1});
+		double[] mins = {min, min, min, min, min, min};
+		INDArray featureMin = Nd4j.create(mins,new int[]{6,1});
+		double[] maxes = {max, max, max, max, max, max};
+		INDArray featureMax = Nd4j.create(maxes,new int[]{6,1});
 		
 //		double[] mins = {min};
 //        INDArray featureMin = Nd4j.create(mins,new int[]{1,1});

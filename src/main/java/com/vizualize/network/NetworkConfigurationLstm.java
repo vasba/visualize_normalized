@@ -29,11 +29,11 @@ public class NetworkConfigurationLstm {
 						.activation(Activation.SOFTSIGN).build())
 				.layer(1, new LSTM.Builder().nIn(lstmLayerSize).nOut(lstmLayerSize)
 						.activation(Activation.SOFTSIGN).build())
-				.layer(2, new LSTM.Builder().nIn(lstmLayerSize).nOut(lstmLayerSize)
-						.activation(Activation.SOFTSIGN).build())
-				.layer(3, new LSTM.Builder().nIn(lstmLayerSize).nOut(lstmLayerSize)
-						.activation(Activation.SOFTSIGN).build())
-				.layer(4, new RnnOutputLayer.Builder(LossFunction.XENT).activation(Activation.SOFTMAX)        //MCXENT + softmax for classification
+//				.layer(2, new LSTM.Builder().nIn(lstmLayerSize).nOut(lstmLayerSize)
+//						.activation(Activation.SOFTSIGN).build())
+//				.layer(3, new LSTM.Builder().nIn(lstmLayerSize).nOut(lstmLayerSize)
+//						.activation(Activation.SOFTSIGN).build())
+				.layer(2, new RnnOutputLayer.Builder(LossFunction.XENT).activation(Activation.SOFTMAX)        //MCXENT + softmax for classification
 						.nIn(lstmLayerSize).nOut(nOut).build())
 //				.backpropType(BackpropType.TruncatedBPTT).tBPTTForwardLength(tbpttLength).tBPTTBackwardLength(tbpttLength)
 				.build();
