@@ -27,7 +27,8 @@ public class NetworkSerializer {
         ModelSerializer.writeModel(network, modelFile, true);
         File metaFile = new File(directory, modelName + "Meta.txt");
         BufferedWriter writer = new BufferedWriter(new FileWriter(metaFile));
-        writer.write(dateStr);
+        if (dateStr != null)
+        	writer.write(dateStr);
          
         writer.close();
     }

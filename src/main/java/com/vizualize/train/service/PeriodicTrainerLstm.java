@@ -9,7 +9,7 @@ public class PeriodicTrainerLstm extends Thread {
     {
         while(true) {
         	String instrument = "OMXS30_5M"; 
-        	int lookForwardPeriod = 4;
+        	int lookForwardPeriod = 8;
         	
         	try {
 				TrainServiceLstm.train(instrument, lookForwardPeriod);

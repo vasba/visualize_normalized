@@ -53,27 +53,27 @@ public class PeaksAndValeys {
 	
 	public static HashMap<Integer, String> localMinima(double [] arrA) {
 		int size = arrA.length;
-		int sampleSize = 9;		
+		int sampleSize = 7;		
 		HashMap<Integer, String> resultHash = new HashMap<>();
 		
 		for (int i = 0;i<size - sampleSize;i++) {
 			double first = arrA[i];
 			double second = arrA[i+1];
 			double third = arrA[i+2];
-			double fourth = arrA[i+3];
-			double fifth = arrA[i+4];
-			double sixth = arrA[i+5];
-			double seventh = arrA[i+6];
-			double eight = arrA[i+7];
-			double nineth = arrA[i+8];
+			double fourth = arrA[i+2];
+			double fifth = arrA[i+3];
+			double sixth = arrA[i+4];
+			double seventh = arrA[i+5];
+			double eight = arrA[i+6];
+			double nineth = arrA[i+6];
 			if (first > fifth && second > fifth && third > fifth && fourth > fifth &&
 					fifth < sixth && fifth < seventh && fifth < eight && fifth < nineth) {
-				resultHash.put(i+4, "bottom");
+				resultHash.put(i+3, "bottom");
 			}
 			
 			if (first < fifth && second < fifth && third < fifth && fourth < fifth &&
 					fifth > sixth && fifth > seventh && fifth > eight && fifth > nineth) {
-				resultHash.put(i+4, "top");
+				resultHash.put(i+3, "top");
 			}			
 		}
 		return resultHash;

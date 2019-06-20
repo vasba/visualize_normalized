@@ -55,36 +55,46 @@ public class LabelCSVNLineOverlappingSequenceReader extends CSVNLineOverlappingS
 //    	return containerList;
 //    }
 	
+//	protected void computeAllLAbels() {
+//		List<List<Writable>> sequence = new ArrayList<>();
+//		while (hasNext()) {
+//			sequence.add(next());
+//		}
+//		double[] ema = Indicator.extractColumn(sequence, 3);
+//		HashMap<Integer, String> resultHash = PeaksAndValeys.localMinima(ema);
+//		List<List<Writable>> labels = sequenceLstmOld(sequence);
+//    }
+	
 	@Override
 	protected List<List<Writable>> sequenceLstm(List<List<Writable>> sequence) {
 		double[] ema = Indicator.extractColumn(sequence, 3);
 		double[] closes = Indicator.extractColumn(sequence, 1);
-		HashMap<Integer, String> resultHash = PeaksAndValeys.localMinima(ema);
+		HashMap<Integer, String> resultHash = PeaksAndValeys.localMinima(ema);		
 		ArrayList containerList = new ArrayList<>();
 		ArrayList labelList = new ArrayList<>();
-		if (resultHash.isEmpty()) {
-			if (ema[0] > ema[ema.length-1])
+		//		int i = 0;
+		String lastValue = null;
+		for (Map.Entry<Integer, String> entry : resultHash.entrySet()) {
+			Integer key = entry.getKey();
+			String value = entry.getValue();
+			//		    i = addLabels(closes, sequence, i, key, value);
+			if (key < nLinesPerSequence)
+				lastValue = value;
+		}
+
+		//		lastValue = reverseType(lastValue);
+		//		addLabelsResolute(closes, sequence, i, closes.length-1, lastValue);
+		if (lastValue == null) {
+			if (ema[nLinesPerSequence- 1] > ema[ema.length - 1])
 				labelList.add(new IntWritable(0));
 			else
 				labelList.add(new IntWritable(1));
-		} else {
-			//		int i = 0;
-			String lastValue = "";
-			for (Map.Entry<Integer, String> entry : resultHash.entrySet()) {
-				Integer key = entry.getKey();
-				String value = entry.getValue();
-				//		    i = addLabels(closes, sequence, i, key, value);
-				lastValue = value;
-			}
-
-			//		lastValue = reverseType(lastValue);
-			//		addLabelsResolute(closes, sequence, i, closes.length-1, lastValue);
-			if (lastValue.contains("bottom")) {
-				labelList.add(new IntWritable(1));
-			} else if (lastValue.contains("top")) {
-				labelList.add(new IntWritable(0));
-			}
+		} else if (lastValue.contains("bottom")) {
+			labelList.add(new IntWritable(1));
+		} else if (lastValue.contains("top")) {
+			labelList.add(new IntWritable(0));
 		}
+
 		containerList.add(labelList);
 		return containerList;
 	}

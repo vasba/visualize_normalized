@@ -59,7 +59,7 @@ public class CSVNLineOverlappingSequenceReader extends CSVNLinesSequenceRecordRe
 	String writableType = "";
 	String dateStr;
 	boolean forLstm = false;
-	int loopBackPeriod = 0;
+	protected int loopBackPeriod = 0;
 	public boolean hasIndicators = false;
 	
 	public void setLoopBackPeriod(int loopBackPeriod) {
@@ -94,10 +94,16 @@ public class CSVNLineOverlappingSequenceReader extends CSVNLinesSequenceRecordRe
 	    }
 	    return res;
 	}
+    
+    protected void computeAllLAbels() {
+    	
+    }
 	
 	@Override
 	public List<List<Writable>> sequenceRecord() {
 	    if (lastSequenceRecord == null) {
+//	    	computeAllLAbels();
+//	    	reset();
 
 	        if (!hasNext()) {
 	            throw new NoSuchElementException("No next element");

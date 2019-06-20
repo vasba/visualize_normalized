@@ -46,7 +46,6 @@ public class TrainServiceLstm extends TrainService {
         csvi.forLstm = true;
         
         String endDate = null;
-        
         DataSetIterator iter = csvi.getIterator(instrumentName, sc.toSparkContext(sc), periodLength, lookForwardPeriod, plotting, closeIndex, true, date, endDate);
         DataSetNormalizer normalizer = new DataSetNormalizer();
         iter.setPreProcessor(normalizer);
@@ -78,7 +77,8 @@ public class TrainServiceLstm extends TrainService {
 		Evaluation evaluation = pretrainNet.evaluate(iter);
 		evaluations.add(evaluation);
         
-        String dateStr = csvi.getLastIteratedDate();
+//        String dateStr = csvi.getLastIteratedDate();
+		String dateStr = null;
         NetworkSerializer.saveModel(pretrainNet, modelName, dateStr);    
 
 	}
