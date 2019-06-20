@@ -74,18 +74,19 @@ public class LabelCSVNLineOverlappingSequenceReader extends CSVNLineOverlappingS
 		ArrayList labelList = new ArrayList<>();
 		//		int i = 0;
 		String lastValue = null;
+		int offsetPeakOrValey = 0;
 		for (Map.Entry<Integer, String> entry : resultHash.entrySet()) {
 			Integer key = entry.getKey();
 			String value = entry.getValue();
 			//		    i = addLabels(closes, sequence, i, key, value);
-			if (key < nLinesPerSequence)
+			if (key < nLinesPerSequence - offsetPeakOrValey)
 				lastValue = value;
 		}
 
 		//		lastValue = reverseType(lastValue);
 		//		addLabelsResolute(closes, sequence, i, closes.length-1, lastValue);
 		if (lastValue == null) {
-			if (ema[nLinesPerSequence- 1] > ema[ema.length - 1])
+			if (ema[0] > ema[nLinesPerSequence - 1])
 				labelList.add(new IntWritable(0));
 			else
 				labelList.add(new IntWritable(1));
