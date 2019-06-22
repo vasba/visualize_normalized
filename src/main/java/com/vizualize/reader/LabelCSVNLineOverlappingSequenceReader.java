@@ -74,7 +74,7 @@ public class LabelCSVNLineOverlappingSequenceReader extends CSVNLineOverlappingS
 		ArrayList labelList = new ArrayList<>();
 		//		int i = 0;
 		String lastValue = null;
-		int offsetPeakOrValey = 3;
+		int offsetPeakOrValey = 5;
 		for (Map.Entry<Integer, String> entry : resultHash.entrySet()) {
 			Integer key = entry.getKey();
 			String value = entry.getValue();
