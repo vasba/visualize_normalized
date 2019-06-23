@@ -38,8 +38,8 @@ public class TrainServiceLstm extends TrainService {
         
         getSc();
         String modelName = getModelName(instrumentName, lookForwardPeriod);
-        MultiLayerNetwork pretrainNet = NetworkSerializer.loadNetwork(modelName);
-        
+//        MultiLayerNetwork pretrainNet = NetworkSerializer.loadNetwork(modelName);
+        MultiLayerNetwork pretrainNet = null;
         String date = NetworkSerializer.lastTrainedDate(modelName);
  
         CSVIterator csvi = new CSVIteratorLstm();
@@ -79,7 +79,7 @@ public class TrainServiceLstm extends TrainService {
         
 //        String dateStr = csvi.getLastIteratedDate();
 		String dateStr = null;
-        NetworkSerializer.saveModel(pretrainNet, modelName, dateStr);    
+//        NetworkSerializer.saveModel(pretrainNet, modelName, dateStr);    
 
 	}
 	
