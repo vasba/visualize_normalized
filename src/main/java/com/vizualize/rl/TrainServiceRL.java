@@ -46,13 +46,13 @@ public class TrainServiceRL extends TrainService {
 	static Evaluation eval = null;
 
 	public static void train(String instrumentName, int lookForwardPeriod) throws Exception {
-		System.setProperty(PlayUIServer.UI_SERVER_PORT_PROPERTY, "9005");
+//		System.setProperty(PlayUIServer.UI_SERVER_PORT_PROPERTY, "9005");
 
-		UIServer uiServer = UIServer.getInstance();
-		StatsStorage mlnStatsStorage1 = new InMemoryStatsStorage();         //Alternative: new FileStatsStorage(File), for saving and loading later
+//		UIServer uiServer = UIServer.getInstance();
+//		StatsStorage mlnStatsStorage1 = new InMemoryStatsStorage();         //Alternative: new FileStatsStorage(File), for saving and loading later
 
 		//Attach the StatsStorage instance to the UI: this allows the contents of the StatsStorage to be visualized
-		uiServer.attach(mlnStatsStorage1);    
+//		uiServer.attach(mlnStatsStorage1);    
 
 		boolean plotting = false;
 
@@ -79,7 +79,7 @@ public class TrainServiceRL extends TrainService {
 			pretrainNet.init();
 		}
 		FilePrinter.write("rlTrainReport.txt", "RL train report", false);
-		pretrainNet.setListeners(new StatsListener(mlnStatsStorage1));
+//		pretrainNet.setListeners(new StatsListener(mlnStatsStorage1));
 		ArrayList evaluations = new ArrayList<>();
 		double averageDuration = 0;
 		int durationSampleCounter = 0;

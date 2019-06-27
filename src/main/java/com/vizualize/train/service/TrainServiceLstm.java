@@ -26,13 +26,13 @@ public class TrainServiceLstm extends TrainService {
 	private static int lstmLayerSize = 50;
 		
 	public static void train(String instrumentName, int lookForwardPeriod) throws Exception {
-    	System.setProperty(PlayUIServer.UI_SERVER_PORT_PROPERTY, "9005");
+//    	System.setProperty(PlayUIServer.UI_SERVER_PORT_PROPERTY, "9005");
     	
-    	UIServer uiServer = UIServer.getInstance();
-    	StatsStorage mlnStatsStorage1 = new InMemoryStatsStorage();         //Alternative: new FileStatsStorage(File), for saving and loading later
+//    	UIServer uiServer = UIServer.getInstance();
+//    	StatsStorage mlnStatsStorage1 = new InMemoryStatsStorage();         //Alternative: new FileStatsStorage(File), for saving and loading later
 
     	//Attach the StatsStorage instance to the UI: this allows the contents of the StatsStorage to be visualized
-    	uiServer.attach(mlnStatsStorage1);    
+//    	uiServer.attach(mlnStatsStorage1);    
 
         boolean plotting = false;
         
@@ -60,7 +60,7 @@ public class TrainServiceLstm extends TrainService {
             pretrainNet.init();
         }
         
-        pretrainNet.setListeners(new StatsListener(mlnStatsStorage1));
+//        pretrainNet.setListeners(new StatsListener(mlnStatsStorage1));
         ArrayList evaluations = new ArrayList<>();
         for( int i=0; i<nEpochs; i++ ) {
     		iter.reset();
