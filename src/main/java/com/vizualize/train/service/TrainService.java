@@ -64,7 +64,7 @@ public class TrainService {
     	System.setProperty(PlayUIServer.UI_SERVER_PORT_PROPERTY, "9005");
     	
 //    	UIServer uiServer = UIServer.getInstance();
-    	StatsStorage mlnStatsStorage1 = new InMemoryStatsStorage();         //Alternative: new FileStatsStorage(File), for saving and loading later
+//    	StatsStorage mlnStatsStorage1 = new InMemoryStatsStorage();         //Alternative: new FileStatsStorage(File), for saving and loading later
 
     	//Attach the StatsStorage instance to the UI: this allows the contents of the StatsStorage to be visualized
 //    	uiServer.attach(mlnStatsStorage1);    
@@ -98,7 +98,7 @@ public class TrainService {
             pretrainNet.init();
         }
         
-        pretrainNet.setListeners(new StatsListener(mlnStatsStorage1));
+//        pretrainNet.setListeners(new StatsListener(mlnStatsStorage1));
         
         IteratorContainer preTrainContainer = new IteratorContainer(preTrainDataIterators, 5);
         ArrayList<TrainTestIteratorPair> pretrainTestSplits = preTrainContainer.getTrainTestList();
