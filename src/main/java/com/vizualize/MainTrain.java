@@ -5,7 +5,7 @@ import com.vizualize.train.service.TrainServiceLstm;
 public class MainTrain {
 
 	public static void main(String[] args) {
-		String instrument = "OMXS30_5M"; 
+		String instrument = "OMXS30_1M"; 
 		int lookForwardPeriod = 50;
 
 		try {
