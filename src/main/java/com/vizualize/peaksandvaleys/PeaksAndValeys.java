@@ -2,6 +2,8 @@ package com.vizualize.peaksandvaleys;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class PeaksAndValeys {
 
@@ -51,10 +53,10 @@ public class PeaksAndValeys {
 		}
 	}
 	
-	public static HashMap<Integer, String> localMinima(double [] arrA) {
+	public static Map<Integer, String> localMinima(double [] arrA) {
 		int size = arrA.length;
 		int sampleSize = 7;		
-		HashMap<Integer, String> resultHash = new HashMap<>();
+		TreeMap<Integer, String> resultHash = new TreeMap<>();
 		
 		for (int i = 0;i<size - sampleSize;i++) {
 			double first = arrA[i];

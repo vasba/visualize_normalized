@@ -36,6 +36,17 @@ public class Plot {
     	plot(dataSet, title);
     }
     
+    public static void plot(final double[]... sets) {
+    	String title = "Multiple sets";
+    	final XYSeriesCollection dataSet = new XYSeriesCollection();
+    	int index = 1;
+    	for (double[] x : sets) {
+    		addSeries(dataSet, x, "Data " + index, 0);
+    		index++;
+    	}
+    	plot(dataSet, title);
+    }
+    
     public static void plot(final INDArray x, final INDArray y, final INDArray predicted, String title) {
         final XYSeriesCollection dataSet = new XYSeriesCollection();
         addSeries(dataSet,x,"Features", 0);

@@ -8,8 +8,8 @@ public class PeriodicTrainerLstm extends Thread {
     public void run()
     {
         while(true) {
-        	String instrument = "OMXS30_1M"; 
-        	int lookForwardPeriod = 5;
+        	String instrument = "OMXS30_5M"; 
+        	int lookForwardPeriod = 50;
         	
         	try {
 				TrainServiceLstm.train(instrument, lookForwardPeriod);
