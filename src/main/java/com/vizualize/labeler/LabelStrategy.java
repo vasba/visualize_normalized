@@ -29,7 +29,7 @@ public class LabelStrategy {
 		String lastValue = null;
 		int lastKey = 0;
 //		int prevKey = 0;
-		int offsetPeakOrValey = 2;
+		int offsetPeakOrValey = 5;
 		for (Map.Entry<Integer, String> entry : resultHash.entrySet()) {
 			Integer key = entry.getKey();
 			String value = entry.getValue();
