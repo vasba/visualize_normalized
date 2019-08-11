@@ -29,7 +29,7 @@ public class LabelStrategy {
 		String lastValue = null;
 		int lastKey = 0;
 //		int prevKey = 0;
-		int offsetPeakOrValey = 5;
+		int offsetPeakOrValey = 0;
 		for (Map.Entry<Integer, String> entry : resultHash.entrySet()) {
 			Integer key = entry.getKey();
 			String value = entry.getValue();
@@ -38,14 +38,16 @@ public class LabelStrategy {
 				index = findMinIndex(closes, lastKey, key);
 			} else if (value.contains("top")) {
 				index = findMaxIndex(closes, lastKey, key);
-			}
-			if (index > nLinesPerSequence - 1 - offsetPeakOrValey)
-				break;
+			}			
+			
 			//		    i = addLabels(closes, sequence, i, key, value);
 //			if (key < nLinesPerSequence - offsetPeakOrValey)
-				lastValue = value;
+			lastValue = value;
 //				prevKey = lastKey;
-				lastKey = key;				
+			lastKey = key;
+			
+			if (index > nLinesPerSequence - 1 - offsetPeakOrValey)
+				break;
 		}
 		
 		//		lastValue = reverseType(lastValue);

@@ -8,6 +8,7 @@ import org.datavec.api.writable.Writable;
 
 import com.tictactec.ta.lib.Core;
 import com.tictactec.ta.lib.MInteger;
+import com.vizualize.config.ConfigProperties;
 
 public class EMAIndicator extends SMAIndicator {
 
@@ -19,7 +20,7 @@ public class EMAIndicator extends SMAIndicator {
 		int size = sequence.size();
 		int startIdx = 0;
 		int endIdx = size - 1;
-		int optInTimePeriod = 20;
+		int optInTimePeriod = ConfigProperties.BBPeriod;
 		MInteger outBegIdx = new MInteger();
 		MInteger outNBElement = new MInteger();
 		double[] outReal = new double[size - optInTimePeriod + 1];

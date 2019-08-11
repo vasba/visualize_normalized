@@ -60,8 +60,8 @@ public class PeaksAndValeys {
 		
 		for (int i = 0;i<size - sampleSize;i++) {
 			double first = arrA[i];
-			double second = arrA[i+1];
-			double third = arrA[i+2];
+			double second = arrA[i];
+			double third = arrA[i+1];
 			double fourth = arrA[i+2];
 			double fifth = arrA[i+3];
 			double sixth = arrA[i+4];

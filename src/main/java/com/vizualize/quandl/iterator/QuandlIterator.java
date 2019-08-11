@@ -42,6 +42,7 @@ import org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.indexing.NDArrayIndex;
 
+import com.vizualize.config.ConfigProperties;
 import com.vizualize.normalizer.NormalizedDataSet;
 import com.vizualize.normalizer.defaults.Defaults;
 import com.vizualize.quandl.QuandlInterface;
@@ -91,7 +92,7 @@ public class QuandlIterator {
     		((CSVNLineOverlappingSequenceReader)reader1).setWritableType("double");
     		reader1.initialize(new FileSplit(file));
     		reader1.hasIndicators = true;
-    		reader1.setLoopBackPeriod(20);
+    		reader1.setLoopBackPeriod(ConfigProperties.BBPeriod);
 
     		SequenceRecordReaderDataSetIterator iterator;
     		if (!classification) {
@@ -100,7 +101,7 @@ public class QuandlIterator {
     			if (forLstm) {
     				CSVNLineOverlappingSequenceReader reader2 = new LabelCSVNLineOverlappingSequenceReader(periodLength, lookForwardPeriod, forPlotting, closeIndex, classification, forLstm);
     				((CSVNLineOverlappingSequenceReader)reader2).setWritableType("double");
-    				reader2.setLoopBackPeriod(20);
+    				reader2.setLoopBackPeriod(ConfigProperties.BBPeriod);
     				reader2.hasIndicators = true;
     				reader2.initialize(new FileSplit(file));
     				iterator = new SequenceRecordReaderDataSetIterator(reader1, reader2, 1, 2,

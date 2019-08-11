@@ -9,6 +9,7 @@ import org.datavec.api.writable.Writable;
 import com.tictactec.ta.lib.Core;
 import com.tictactec.ta.lib.MAType;
 import com.tictactec.ta.lib.MInteger;
+import com.vizualize.config.ConfigProperties;
 
 public class BBIndicator extends Indicator{
 	
@@ -21,7 +22,7 @@ public class BBIndicator extends Indicator{
 		int size = sequence.size();
 		int startIdx = 0;
 		int endIdx = size - 1;
-		int optInTimePeriod = 20;
+		int optInTimePeriod = ConfigProperties.BBPeriod;
 		MInteger outBegIdx = new MInteger();
 		MInteger outNBElement = new MInteger();
 		double[] outRealUpperBand = new double[size - optInTimePeriod + 1];
