@@ -38,16 +38,16 @@ public class LabelStrategy {
 				index = findMinIndex(closes, lastKey, key);
 			} else if (value.contains("top")) {
 				index = findMaxIndex(closes, lastKey, key);
-			}			
+			}
+			
+			if (index > nLinesPerSequence - 1 - offsetPeakOrValey)
+				break;
 			
 			//		    i = addLabels(closes, sequence, i, key, value);
 //			if (key < nLinesPerSequence - offsetPeakOrValey)
 			lastValue = value;
 //				prevKey = lastKey;
-			lastKey = key;
-			
-			if (index > nLinesPerSequence - 1 - offsetPeakOrValey)
-				break;
+			lastKey = key;				
 		}
 		
 		//		lastValue = reverseType(lastValue);
