@@ -80,4 +80,32 @@ public class PeaksAndValeys {
 		}
 		return resultHash;
 	}
+	
+	public static Map<Integer, String> localMinimaStrong(double [] arrA) {
+		int size = arrA.length;
+		int sampleSize = 7;		
+		TreeMap<Integer, String> resultHash = new TreeMap<>();
+		
+		for (int i = 0;i<size - sampleSize;i++) {
+			double first = arrA[i];
+			double second = arrA[i];
+			double third = arrA[i+1];
+			double fourth = arrA[i+2];
+			double fifth = arrA[i+3];
+			double sixth = arrA[i+4];
+			double seventh = arrA[i+5];
+			double eight = arrA[i+6];
+			double nineth = arrA[i+6];
+			if (first >= second && second >= third && third >= fourth && fourth >= fifth &&
+					fifth <= sixth && sixth <= seventh && seventh <= eight && eight <= nineth) {
+				resultHash.put(i+3, "bottom");
+			}
+			
+			if (first <= second && second <= third && third <= fourth && fourth <= fifth &&
+					fifth >= sixth && sixth >= seventh && seventh >= eight && eight >= nineth) {
+				resultHash.put(i+3, "top");
+			}			
+		}
+		return resultHash;
+	}
 }

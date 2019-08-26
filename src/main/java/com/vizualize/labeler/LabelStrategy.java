@@ -23,7 +23,7 @@ public class LabelStrategy {
 	public List<List<Writable>> createLabels(List<List<Writable>> sequence, int nLinesPerSequence) {
 		double[] ema = Indicator.extractColumn(sequence, 3);
 		double[] closes = Indicator.extractColumn(sequence, 1);
-		Map<Integer, String> resultHash = PeaksAndValeys.localMinima(ema);		
+		Map<Integer, String> resultHash = PeaksAndValeys.localMinimaStrong(ema);		
 		ArrayList containerList = new ArrayList<>();
 		ArrayList labelList = new ArrayList<>();
 		//		int i = 0;
