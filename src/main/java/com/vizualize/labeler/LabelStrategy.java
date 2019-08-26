@@ -7,6 +7,7 @@ import java.util.Map;
 import org.datavec.api.writable.IntWritable;
 import org.datavec.api.writable.Writable;
 
+import com.vizualize.config.ConfigProperties;
 import com.vizualize.indicator.Indicator;
 import com.vizualize.peaksandvaleys.PeaksAndValeys;
 
@@ -29,7 +30,7 @@ public class LabelStrategy {
 		String lastValue = null;
 		int lastKey = 0;
 //		int prevKey = 0;
-		int offsetPeakOrValey = 0;
+		int offsetPeakOrValey = ConfigProperties.OFFSET_PEAK_VALEY;
 		for (Map.Entry<Integer, String> entry : resultHash.entrySet()) {
 			Integer key = entry.getKey();
 			String value = entry.getValue();

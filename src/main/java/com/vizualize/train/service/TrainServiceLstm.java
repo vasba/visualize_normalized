@@ -12,6 +12,7 @@ import org.deeplearning4j.ui.stats.StatsListener;
 import org.deeplearning4j.ui.storage.InMemoryStatsStorage;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 
+import com.vizualize.config.ConfigProperties;
 import com.vizualize.network.NetworkConfigurationLstm;
 import com.vizualize.network.NetworkSerializer;
 import com.vizualize.quandl.iterator.CSVIterator;
@@ -21,7 +22,7 @@ import com.vizualize.writer.FilePrinter;
 
 public class TrainServiceLstm extends TrainService {
 	
-	private static int nIn = 6;
+	private static int nIn = ConfigProperties.NUMBER_OF_INPUTS;
 	private static int nOut = 2;
 	private static int lstmLayerSize = 50;
 		

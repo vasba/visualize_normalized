@@ -47,7 +47,8 @@ public class BBIndicator extends Indicator{
 			Writable middle = new DoubleWritable(outRealMiddleBand[i]);
 			Writable lower = new DoubleWritable(outRealLowerBand[i]);
 			l.add(upper);
-			l.add(middle);
+			if (ConfigProperties.ICLUDE_BB_MIDLE)
+				l.add(middle);
 			l.add(lower);
 		}
 	}
